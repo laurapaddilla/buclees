@@ -49,14 +49,15 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 - `projects`: user_id (CASCADE), name, material, status (`en_curso`/`terminado`), **pattern_id** opcional → patterns (SET NULL).
 - `project_counters_notes`: project_id (UNIQUE, CASCADE), **row_count** (equivale a "filas"), **target_rows** opcional (vuelta objetivo del RowCounter), notes. Se crea en la misma transacción que el proyecto.
 - Sin `updated_at` (descartado por la autora).
-- El **contador de vueltas tendrá más funcionalidades** (por definir con la autora): el esquema de `project_counters_notes` crecerá con migraciones nuevas.
+- **Contador (decisiones del 25/10/2026):** inspirado en la app Punto Fácil. **Un solo contador por proyecto** (se mantiene la relación 1:1). "Elegir vuelta de inicio" fija `row_count` a cualquier valor (0, 15…); **reiniciar vuelve siempre a 0**. Tendrá más funcionalidades por definir: el esquema crecerá con migraciones nuevas.
+- **Taller Buclees** (ruta frontend `/taller`): sección que agrupa los proyectos, el contador y las funciones que se añadan. En la API las rutas siguen siendo `/api/projects`.
 
 ## API REST
 - `/api/auth`: `POST /register`, `POST /login` (devuelven `{ user, token }`) y `GET /me` (requiere token). Hecho.
 - `/api/products`: listar, filtrar por categoría, detalle. Crear/editar solo admin.
 - `/api/patterns`: listar (filtrar por dificultad) y detalle, públicos. Crear/editar solo admin.
-- `/api/projects`: CRUD de los proyectos del usuario autenticado.
-- `/api/projects/:id/counter`: leer, incrementar, decrementar, resetear y actualizar notas.
+- `/api/projects` (todo con `authRequired`): `GET /`, `POST /` (acepta `start_row` y `target_rows`; crea proyecto y contador en una transacción), `GET /:id`, `PATCH /:id`, `DELETE /:id`. Hecho.
+- `/api/projects/:id/counter`: `GET`, `POST /increment`, `POST /decrement`, `POST /reset` (a 0), `PATCH` (`row_count` para elegir vuelta, `target_rows`, `notes`). Responden `{ counter: { row_count, target_rows, notes } }`. Hecho.
 - `/api/orders`: crear pedido y ver historial del usuario.
 
 ## Reglas técnicas obligatorias
@@ -99,7 +100,8 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - El 25/10/2026 se eliminó un esquema anterior creado por otro asistente (`001_initial_schema.sql`, sin archivo fuente, con 6 productos de prueba) y se sustituyó por las migraciones 001…006.
 - **Seed** (`npm run seed`, `src/db/seed.js`): vacía todas las tablas (TRUNCATE … RESTART IDENTITY) y carga datos de prueba en una transacción; se niega a ejecutarse con NODE_ENV=production. Crea la admin con `ADMIN_NAME/ADMIN_EMAIL/ADMIN_PASSWORD` de `.env` (falla si faltan), usuarios de prueba `ana@buclees.test` (3 proyectos, 1 pedido) y `lucia@buclees.test` (vacía, para estados vacíos), ambos con contraseña `Prueba123!`, 10 productos (5 ovillos, uno inactivo; 2 kits enlazados a su patrón; 3 accesorios) y 4 patrones. Contraseñas con bcryptjs (coste 10).
 - **Paso 3 hecho: autenticación.** Decisiones: token JWT guardado por el frontend en **localStorage** y enviado en `Authorization: Bearer <token>` (no cookie httpOnly); validación con **zod** (`validators/` + middleware genérico `validate(schema)`); token con `sub` (id) y `role`, caduca a los 7 días (`JWT_EXPIRES_IN`); `JWT_SECRET` en `.env` (el servidor no arranca sin él). Errores previstos con `utils/HttpError` y el manejador de `app.js` (Express 5 pasa solos los errores async). Contraseña 8–72 caracteres (72 = límite de bcrypt). Login con el mismo 401 para email inexistente y contraseña mala. `authRequired` y `adminOnly` en `middleware/auth.js`.
-- **Siguiente:** paso 4, proyectos y contador (backend); después, frontend del contador para ver la web pronto (orden propuesto por Claude, pendiente de confirmar). Repositorio en GitHub (privado): https://github.com/laurapaddilla/buclees, rama `main` enlazada a `origin/main`. Revisar la normativa de `docs/` (PDF) para la memoria.
+- **Paso 4 hecho (backend): proyectos y contador.** Propietario comprobado **dentro de cada consulta** (`WHERE p.user_id = $2`), así la operación es atómica y no hay consulta previa. Proyecto ajeno o id no numérico → **404** (no 403), para no revelar que existe. PATCH dinámico con lista blanca de columnas (`buildSet`). Probado: 50 pulsaciones simultáneas → 50.
+- **Siguiente:** frontend (Vue 3 + Vite) empezando por login y el Taller con el contador, para ver la web pronto; después tienda (paso 5) y pedidos (paso 6). Orden propuesto por Claude, pendiente de confirmar. Repositorio en GitHub (privado): https://github.com/laurapaddilla/buclees, rama `main` enlazada a `origin/main`. Revisar la normativa de `docs/` (PDF) para la memoria.
 
 ## Documentación del TFG
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).
