@@ -4,6 +4,7 @@ import { testConnection } from './db/pool.js';
 import { HttpError } from './utils/HttpError.js';
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/project.routes.js';
+import patternRoutes from './routes/pattern.routes.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/api/health/db', async (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/patterns', patternRoutes);
 
 // Rutas no encontradas.
 app.use((req, res) => {

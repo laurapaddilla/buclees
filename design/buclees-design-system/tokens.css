@@ -103,12 +103,12 @@
   --font-sans: Nunito, "Segoe UI", system-ui, sans-serif;
 }
 
-.display { font-family: var(--font-display); font-size: 56px; line-height: 60px; font-weight: 600; letter-spacing: 0em; }}
-.h1 { font-family: var(--font-display); font-size: 36px; line-height: 42px; font-weight: 600; }}
-.h2 { font-family: var(--font-display); font-size: 26px; line-height: 32px; font-weight: 600; }}
-.counter { font-family: var(--font-display); font-size: 72px; line-height: 72px; font-weight: 600; }}
-.h3 { font-family: var(--font-sans); font-size: 19px; line-height: 26px; font-weight: 800; }}
-.body { font-family: var(--font-sans); font-size: 16px; line-height: 26px; font-weight: 400; }}
-.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 22px; font-weight: 400; }}
-.label { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0.04em; }}
-.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; }}
+.display { font-family: var(--font-display); font-size: 56px; line-height: 60px; font-weight: 600; letter-spacing: 0em; }
+.h1 { font-family: var(--font-display); font-size: 36px; line-height: 42px; font-weight: 600; }
+.h2 { font-family: var(--font-display); font-size: 26px; line-height: 32px; font-weight: 600; }
+.counter { font-family: var(--font-display); font-size: 72px; line-height: 72px; font-weight: 600; }
+.h3 { font-family: var(--font-sans); font-size: 19px; line-height: 26px; font-weight: 800; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 26px; font-weight: 400; }
+.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 22px; font-weight: 400; }
+.label { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0.04em; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; }

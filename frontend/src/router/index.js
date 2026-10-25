@@ -8,6 +8,10 @@ const routes = [
   { path: '/entrar', name: 'login', component: () => import('@/views/LoginView.vue'), meta: { guestOnly: true } },
   { path: '/registro', name: 'register', component: () => import('@/views/RegisterView.vue'), meta: { guestOnly: true } },
   { path: '/taller', name: 'taller', component: () => import('@/views/TallerView.vue'), meta: { requiresAuth: true } },
+  // "nuevo" va antes que ":id" para que no se interprete como un id.
+  { path: '/taller/nuevo', name: 'project-new', component: () => import('@/views/ProjectFormView.vue'), meta: { requiresAuth: true } },
+  { path: '/taller/:id(\\d+)', name: 'project-work', component: () => import('@/views/ProjectWorkView.vue'), meta: { requiresAuth: true } },
+  { path: '/taller/:id(\\d+)/editar', name: 'project-edit', component: () => import('@/views/ProjectFormView.vue'), meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
 ];
 

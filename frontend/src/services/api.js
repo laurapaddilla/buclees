@@ -29,7 +29,8 @@ export const setUnauthorizedHandler = (handler) => {
   onUnauthorized = handler;
 };
 
-export async function api(path, { method = 'GET', body } = {}) {
+// keepalive: la petición termina aunque la página se esté cerrando (guardar notas al salir).
+export async function api(path, { method = 'GET', body, keepalive = false } = {}) {
   const headers = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   const token = tokenStorage.get();
@@ -41,6 +42,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      keepalive,
     });
   } catch {
     throw new ApiError(0, 'No hay conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.');

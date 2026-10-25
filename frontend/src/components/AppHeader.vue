@@ -1,11 +1,17 @@
 <script setup>
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 import logoHorizontal from '@/assets/logos/buclees-logo-horizontal.png';
 import isotipo from '@/assets/logos/buclees-isotipo.png';
 
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
+
+// Vue Router solo marca como activo un enlace si las rutas están anidadas; /taller/:id no lo está,
+// así que la sección se calcula por la dirección.
+const inTaller = computed(() => route.path.startsWith('/taller'));
 
 function logout() {
   auth.logout();
@@ -24,7 +30,7 @@ function logout() {
 
       <nav class="header__nav" aria-label="Principal">
         <RouterLink to="/" class="header__link">Tienda</RouterLink>
-        <RouterLink to="/taller" class="header__link">Taller</RouterLink>
+        <RouterLink to="/taller" :class="['header__link', { 'is-current': inTaller }]">Taller</RouterLink>
         <RouterLink v-if="!auth.isAuthenticated" to="/entrar" class="header__link header__link--cta">Entrar</RouterLink>
         <button v-else type="button" class="header__link" @click="logout">Salir</button>
       </nav>
@@ -101,7 +107,8 @@ function logout() {
 }
 
 /* Página actual: subrayado además del color, para no depender solo del color. */
-.header__link.router-link-exact-active {
+.header__link.router-link-exact-active,
+.header__link.is-current {
   color: var(--oliva-strong);
   text-decoration: underline;
   text-underline-offset: 6px;
