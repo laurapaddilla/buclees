@@ -43,15 +43,16 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
   - El registro público crea siempre `role = 'user'`; el backend ignora cualquier `role` que llegue en la petición. La cuenta admin se crea por script con credenciales de `.env` (`ADMIN_EMAIL`, `ADMIN_PASSWORD`), nunca escritas en el código.
 - **Tienda y patrones separados (migración 007).** Los patrones son **todos gratuitos y no se venden**: se consultan y se enlazan a proyectos y kits. La tienda vende ovillos, kits (lana + patrón) y accesorios (ganchillos, bolsas de almacenaje…). Catálogo y categorías se irán puliendo cuando la web sea visible.
 - `products` (lo que se vende): title, description, price, category (`ovillo`/`kit`/`accesorio`), stock, image_url, **is_active** (retirar sin borrar). Opcionales para las tarjetas del diseño: hook_size, yarn_weight (`Lace`/`Fingering`/`Sport`/`DK`/`Worsted`/`Bulky`), fiber, meters. **pattern_id** (SET NULL): patrón que incluye un kit; un CHECK impide que otras categorías lo tengan.
-- `patterns` (lo que se consulta, gratis): title, description, difficulty (`principiante`/`intermedio`/`avanzado`, obligatoria), hook_size, yarn_weight, image_url, is_active. Sin precio ni stock. Formato del contenido (PDF o pasos con `TutorialStep`) **pendiente de decidir**.
+- `patterns` (lo que se consulta, gratis): title, description, difficulty (`principiante`/`intermedio`/`avanzado`, obligatoria), hook_size, yarn_weight, image_url, is_active. Sin precio ni stock. El contenido irá **en la base de datos** (pasos, para el componente `TutorialStep`); su estructura se definirá más adelante.
 - `orders`: user_id (RESTRICT), total, status (`pendiente`/`pagado`/`enviado`/`entregado`/`cancelado`). La fecha es created_at.
 - `order_items`: order_id (CASCADE), product_id (RESTRICT), quantity, unit_price, UNIQUE (order_id, product_id).
 - `projects`: user_id (CASCADE), name, material, status (`en_curso`/`terminado`), **pattern_id** opcional → patterns (SET NULL).
 - `project_counters_notes`: project_id (UNIQUE, CASCADE), **row_count** (equivale a "filas"), **target_rows** opcional (vuelta objetivo del RowCounter), notes. Se crea en la misma transacción que el proyecto.
 - Sin `updated_at` (descartado por la autora).
+- El **contador de vueltas tendrá más funcionalidades** (por definir con la autora): el esquema de `project_counters_notes` crecerá con migraciones nuevas.
 
 ## API REST
-- `/api/auth`: registro y login (bcrypt + JWT).
+- `/api/auth`: `POST /register`, `POST /login` (devuelven `{ user, token }`) y `GET /me` (requiere token). Hecho.
 - `/api/products`: listar, filtrar por categoría, detalle. Crear/editar solo admin.
 - `/api/patterns`: listar (filtrar por dificultad) y detalle, públicos. Crear/editar solo admin.
 - `/api/projects`: CRUD de los proyectos del usuario autenticado.
@@ -97,7 +98,8 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - **Paso 2 hecho. Migraciones aplicadas:** SQL plano en `backend/migrations/NNN_nombre.sql`, ejecutado por `src/db/migrate.js` (cada migración en su transacción, registradas en `schema_migrations`). Comandos: `npm run migrate`, `npm run migrate:status`, `npm run migrate:new -- nombre`. Solo hacia delante: para cambiar algo aplicado se crea una migración nueva.
 - El 25/10/2026 se eliminó un esquema anterior creado por otro asistente (`001_initial_schema.sql`, sin archivo fuente, con 6 productos de prueba) y se sustituyó por las migraciones 001…006.
 - **Seed** (`npm run seed`, `src/db/seed.js`): vacía todas las tablas (TRUNCATE … RESTART IDENTITY) y carga datos de prueba en una transacción; se niega a ejecutarse con NODE_ENV=production. Crea la admin con `ADMIN_NAME/ADMIN_EMAIL/ADMIN_PASSWORD` de `.env` (falla si faltan), usuarios de prueba `ana@buclees.test` (3 proyectos, 1 pedido) y `lucia@buclees.test` (vacía, para estados vacíos), ambos con contraseña `Prueba123!`, 10 productos (5 ovillos, uno inactivo; 2 kits enlazados a su patrón; 3 accesorios) y 4 patrones. Contraseñas con bcryptjs (coste 10).
-- **Siguiente:** paso 3, autenticación. Repositorio en GitHub (privado): https://github.com/laurapaddilla/buclees, rama `main` enlazada a `origin/main`. Revisar la normativa de `docs/` (PDF) para la memoria.
+- **Paso 3 hecho: autenticación.** Decisiones: token JWT guardado por el frontend en **localStorage** y enviado en `Authorization: Bearer <token>` (no cookie httpOnly); validación con **zod** (`validators/` + middleware genérico `validate(schema)`); token con `sub` (id) y `role`, caduca a los 7 días (`JWT_EXPIRES_IN`); `JWT_SECRET` en `.env` (el servidor no arranca sin él). Errores previstos con `utils/HttpError` y el manejador de `app.js` (Express 5 pasa solos los errores async). Contraseña 8–72 caracteres (72 = límite de bcrypt). Login con el mismo 401 para email inexistente y contraseña mala. `authRequired` y `adminOnly` en `middleware/auth.js`.
+- **Siguiente:** paso 4, proyectos y contador (backend); después, frontend del contador para ver la web pronto (orden propuesto por Claude, pendiente de confirmar). Repositorio en GitHub (privado): https://github.com/laurapaddilla/buclees, rama `main` enlazada a `origin/main`. Revisar la normativa de `docs/` (PDF) para la memoria.
 
 ## Documentación del TFG
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).

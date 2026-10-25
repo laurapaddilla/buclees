@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { testConnection } from './db/pool.js';
+import { HttpError } from './utils/HttpError.js';
+import authRoutes from './routes/auth.routes.js';
 
 const app = express();
 
@@ -22,13 +24,24 @@ app.get('/api/health/db', async (req, res) => {
   }
 });
 
+app.use('/api/auth', authRoutes);
+
 // Rutas no encontradas.
 app.use((req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada' });
 });
 
-// Manejador de errores general.
+// Manejador de errores general. Express lo reconoce porque tiene 4 parámetros.
 app.use((err, req, res, next) => {
+  // Errores previstos, lanzados por servicios y middlewares.
+  if (err instanceof HttpError) {
+    return res.status(err.status).json({ message: err.message, details: err.details });
+  }
+  // JSON mal formado en el cuerpo de la petición.
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'El cuerpo de la petición no es un JSON válido' });
+  }
+  // Cualquier otro error: se registra en la consola y no se dan detalles internos al cliente.
   console.error(err);
   res.status(500).json({ message: 'Error interno del servidor' });
 });
