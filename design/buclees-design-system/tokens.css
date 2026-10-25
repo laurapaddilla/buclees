@@ -1,0 +1,114 @@
+/* Buclees — tokens de diseño (generado desde tokens.json) */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Nunito:wght@400..800&display=swap");
+
+:root, [data-theme="light"] {
+  --surface-100: #fcf9ed;
+  --surface-200: #f4efdc;
+  --surface-raised: #ffffff;
+  --kraft: #dcc09a;
+  --line: #e6dfc6;
+  --line-strong: #968566;
+  --ink: #33321a;
+  --ink-muted: #67624a;
+  --oliva: #888e45;
+  --oliva-strong: #5d6228;
+  --oliva-deep: #4b4f1f;
+  --on-oliva: #fcf9ed;
+  --oliva-soft: #eaeecf;
+  --oliva-text: #48521a;
+  --rosa: #f29dc3;
+  --on-rosa: #33321a;
+  --rosa-strong: #a8336b;
+  --rosa-soft: #fde2ee;
+  --rosa-text: #93295b;
+  --amarillo: #f6d344;
+  --on-amarillo: #33321a;
+  --amarillo-soft: #fdf1c4;
+  --amarillo-text: #6e5506;
+  --danger: #b42318;
+  --focus: #33321a;
+  --shadow-card: 0 1px 2px rgba(51,50,26,0.06), 0 8px 20px rgba(51,50,26,0.08);
+}
+[data-theme="dark"] {
+  --surface-100: #22201a;
+  --surface-200: #2c2920;
+  --surface-raised: #332f25;
+  --kraft: #7a6646;
+  --line: #4a4434;
+  --line-strong: #8f846b;
+  --ink: #fbf5e8;
+  --ink-muted: #d2c9b2;
+  --oliva: #b9bf6c;
+  --oliva-strong: #d0d58f;
+  --oliva-deep: #e0e4aa;
+  --on-oliva: #22201a;
+  --oliva-soft: #383d1b;
+  --oliva-text: #dbe29f;
+  --rosa: #f5afcf;
+  --on-rosa: #22201a;
+  --rosa-strong: #f7c3dc;
+  --rosa-soft: #4b2738;
+  --rosa-text: #f8c9df;
+  --amarillo: #f7d65a;
+  --on-amarillo: #22201a;
+  --amarillo-soft: #4a3f14;
+  --amarillo-text: #f9e391;
+  --danger: #ff9e94;
+  --focus: #f7d65a;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-100: #22201a;
+    --surface-200: #2c2920;
+    --surface-raised: #332f25;
+    --kraft: #7a6646;
+    --line: #4a4434;
+    --line-strong: #8f846b;
+    --ink: #fbf5e8;
+    --ink-muted: #d2c9b2;
+    --oliva: #b9bf6c;
+    --oliva-strong: #d0d58f;
+    --oliva-deep: #e0e4aa;
+    --on-oliva: #22201a;
+    --oliva-soft: #383d1b;
+    --oliva-text: #dbe29f;
+    --rosa: #f5afcf;
+    --on-rosa: #22201a;
+    --rosa-strong: #f7c3dc;
+    --rosa-soft: #4b2738;
+    --rosa-text: #f8c9df;
+    --amarillo: #f7d65a;
+    --on-amarillo: #22201a;
+    --amarillo-soft: #4a3f14;
+    --amarillo-text: #f9e391;
+    --danger: #ff9e94;
+    --focus: #f7d65a;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.28);
+  }
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+  --font-display: Fredoka, "Baloo 2", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-sans: Nunito, "Segoe UI", system-ui, sans-serif;
+}
+
+.display { font-family: var(--font-display); font-size: 56px; line-height: 60px; font-weight: 600; letter-spacing: 0em; }}
+.h1 { font-family: var(--font-display); font-size: 36px; line-height: 42px; font-weight: 600; }}
+.h2 { font-family: var(--font-display); font-size: 26px; line-height: 32px; font-weight: 600; }}
+.counter { font-family: var(--font-display); font-size: 72px; line-height: 72px; font-weight: 600; }}
+.h3 { font-family: var(--font-sans); font-size: 19px; line-height: 26px; font-weight: 800; }}
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 26px; font-weight: 400; }}
+.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 22px; font-weight: 400; }}
+.label { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0.04em; }}
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; }}

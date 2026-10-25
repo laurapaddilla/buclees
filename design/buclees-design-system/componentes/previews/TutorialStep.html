@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+<head><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../buclees.css"><script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script><script src="../buclees.umd.js"></script><meta charset="utf-8"><title>TutorialStep — Buclees</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var B = window.Buclees, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{style:{display:'grid',gap:'12px'}},h(B.TutorialStep,{step:1,title:'Anillo mágico',stitches:['am','pb'],done:true},h('p',null,'Haz un anillo mágico y teje 6 puntos bajos dentro. Tira de la hebra para cerrar.')),h(B.TutorialStep,{step:2,title:'Vuelta 2: aumentos',stitches:['aum','pr']},h('p',null,'Haz un aumento en cada punto (12). Cierra con un punto raso en el primer punto.'))));
+</script>
+</body>
+</html>

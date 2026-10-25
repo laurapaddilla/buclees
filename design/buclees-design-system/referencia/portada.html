@@ -1,0 +1,45 @@
+<!-- @dsCard height=300 -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Buclees — portada</title>
+<style>
+  html, body { margin: 0; padding: 0; background: var(--surface-100); }
+  .cover { position: relative; width: 960px; height: 300px; overflow: hidden; background: var(--surface-100); }
+  .cover svg { position: absolute; inset: 0; }
+  .rosa { fill: var(--rosa); }
+  .amarillo { fill: var(--amarillo); }
+  .oliva { fill: var(--oliva); }
+  .kraft { fill: var(--kraft); }
+  .r-lg { rx: var(--radius-lg); }
+  .loop { fill: none; stroke: var(--surface-100); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .text { position: absolute; left: 48px; bottom: 40px; max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 100px; line-height: .95; color: var(--oliva); }
+  .tagline { margin: 16px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 22px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+  <!--
+    blocks: oliva slab 216×232 (radius-lg), rosa disc r76, amarillo disc r60, kraft label 192×96 (radius-lg), small rosa disc r24
+    arrangement: a pile of balls of yarn around a kraft label, like the product photo; oliva bleeds off the top, kraft off the right
+    pattern: literal motif — the loop-ee thread drawn as one continuous chain of loops across oliva and kraft, cut in surface-100; chosen because the name is the loop
+    scales: pitch space-6 (24px), gaps space-4/space-6, corners radius-lg, discs = radius-pill
+  -->
+  <svg width="960" height="300" viewBox="0 0 960 300" aria-hidden="true">
+    <rect class="oliva r-lg" x="520" y="-32" width="216" height="232"/>
+    <circle class="rosa" cx="828" cy="92" r="76"/>
+    <circle class="amarillo" cx="612" cy="244" r="60"/>
+    <rect class="kraft r-lg" x="696" y="196" width="296" height="96"/>
+    <circle class="rosa" cx="512" cy="196" r="24"/>
+    <path class="loop" d="M536 128 C 548 128, 560 126, 570 122 C 572 108, 564 100, 556 100 C 546 100, 540 110, 540 120 C 540 134, 548 140, 558 140 C 566 140, 572 136, 576 130 C 586 126, 598 124, 608 122 C 610 108, 602 100, 594 100 C 584 100, 578 110, 578 120 C 578 134, 586 140, 596 140 C 604 140, 610 136, 614 130 C 624 126, 636 124, 646 122 C 648 108, 640 100, 632 100 C 622 100, 616 110, 616 120 C 616 134, 624 140, 634 140 C 642 140, 648 136, 652 130 C 662 126, 674 124, 684 122 C 686 108, 678 100, 670 100 C 660 100, 654 110, 654 120 C 654 134, 662 140, 672 140 C 680 140, 690 134, 712 128"/>
+    <path class="loop" d="M720 252 C 732 252, 744 250, 754 246 C 756 232, 748 224, 740 224 C 730 224, 724 234, 724 244 C 724 258, 732 264, 742 264 C 750 264, 756 260, 760 254 C 770 250, 782 248, 792 246 C 794 232, 786 224, 778 224 C 768 224, 762 234, 762 244 C 762 258, 770 264, 780 264 C 788 264, 794 260, 798 254 C 808 250, 820 248, 830 246 C 832 232, 824 224, 816 224 C 806 224, 800 234, 800 244 C 800 258, 808 264, 818 264 C 826 264, 832 260, 836 254 C 846 250, 858 248, 868 246 C 870 232, 862 224, 854 224 C 844 224, 838 234, 838 244 C 838 258, 846 264, 856 264 C 864 264, 874 258, 960 250"/>
+  </svg>
+  <div class="text">
+    <h1 class="name">Buclees</h1>
+    <p class="tagline">El arte de tejer tu propio mundo.</p>
+  </div>
+</div>
+</body>
+</html>

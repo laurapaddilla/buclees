@@ -1,0 +1,8 @@
+# Guarda los archivos de texto con saltos de línea LF en el repositorio,
+# aunque en Windows se editen con CRLF (evita diffs falsos entre sistemas).
+* text=auto eol=lf
+
+# Binarios: no tocar.
+*.png binary
+*.jpg binary
+*.pdf binary
