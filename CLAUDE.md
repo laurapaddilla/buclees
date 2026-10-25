@@ -24,7 +24,9 @@ La funcionalidad estrella es la vista de trabajo del proyecto: contador de filas
 - Frontend: Vue 3 + Vite + Vue Router + Pinia.
 - Estructura backend: `routes/ → controllers/ → services/ → db/`, más `middleware/` y `migrations/`.
 
-## Base de datos (6 tablas, scripts SQL de migración)
+## Base de datos (7 tablas, scripts SQL de migración)
+
+Especificación original (6 tablas); el 25/10/2026 se añadió `patterns` (ver "Esquema implementado").
 1. `users`: id, nombre, email (único), contraseña cifrada, rol (`user` / `admin`, con CHECK).
 2. `products`: id, título, descripción, precio, categoría (`ovillo` / `patron` / `accesorio`), stock, imagen.
 3. `orders`: id, user_id, fecha, total, estado.
@@ -34,21 +36,24 @@ La funcionalidad estrella es la vista de trabajo del proyecto: contador de filas
 
 Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAMPTZ DEFAULT now()` en todas las tablas. Estados y roles con CHECK o ENUM.
 
-**Esquema implementado** (`backend/migrations/001…006`; decisiones de la autora del 25/10/2026):
+**Esquema implementado** (`backend/migrations/001…007`; decisiones de la autora del 25/10/2026):
 - Nombres de tablas y columnas en inglés; valores de estados/categorías en español, como en la especificación. Ids `INTEGER GENERATED ALWAYS AS IDENTITY`. Estados y roles con **CHECK** (no ENUM).
 - `users`: name, email (UNIQUE, el backend lo guarda en minúsculas), password_hash, role (`user`/`admin`).
-  - **Solo dos roles, decisión cerrada.** El admin es la autora (Buclees): es la única que sube productos, incluidos los patrones. Los usuarios compran y llevan sus proyectos. No habrá rol de vendedora ni patrones subidos por usuarios (se descartó por complejidad innecesaria).
+  - **Solo dos roles, decisión cerrada.** El admin es la autora (Buclees): es la única que sube productos y patrones. Los usuarios compran y llevan sus proyectos. No habrá rol de vendedora ni patrones subidos por usuarios (se descartó por complejidad innecesaria).
   - El registro público crea siempre `role = 'user'`; el backend ignora cualquier `role` que llegue en la petición. La cuenta admin se crea por script con credenciales de `.env` (`ADMIN_EMAIL`, `ADMIN_PASSWORD`), nunca escritas en el código.
-- `products`: title, description, price, category, stock, image_url, **is_active** (retirar sin borrar). Columnas opcionales que piden las tarjetas del diseño: difficulty (`principiante`/`intermedio`/`avanzado`), designer, hook_size, yarn_weight (`Lace`/`Fingering`/`Sport`/`DK`/`Worsted`/`Bulky`), fiber, meters.
+- **Tienda y patrones separados (migración 007).** Los patrones son **todos gratuitos y no se venden**: se consultan y se enlazan a proyectos y kits. La tienda vende ovillos, kits (lana + patrón) y accesorios (ganchillos, bolsas de almacenaje…). Catálogo y categorías se irán puliendo cuando la web sea visible.
+- `products` (lo que se vende): title, description, price, category (`ovillo`/`kit`/`accesorio`), stock, image_url, **is_active** (retirar sin borrar). Opcionales para las tarjetas del diseño: hook_size, yarn_weight (`Lace`/`Fingering`/`Sport`/`DK`/`Worsted`/`Bulky`), fiber, meters. **pattern_id** (SET NULL): patrón que incluye un kit; un CHECK impide que otras categorías lo tengan.
+- `patterns` (lo que se consulta, gratis): title, description, difficulty (`principiante`/`intermedio`/`avanzado`, obligatoria), hook_size, yarn_weight, image_url, is_active. Sin precio ni stock. Formato del contenido (PDF o pasos con `TutorialStep`) **pendiente de decidir**.
 - `orders`: user_id (RESTRICT), total, status (`pendiente`/`pagado`/`enviado`/`entregado`/`cancelado`). La fecha es created_at.
 - `order_items`: order_id (CASCADE), product_id (RESTRICT), quantity, unit_price, UNIQUE (order_id, product_id).
-- `projects`: user_id (CASCADE), name, material, status (`en_curso`/`terminado`), product_id (SET NULL; que sea un patrón lo comprueba el backend).
+- `projects`: user_id (CASCADE), name, material, status (`en_curso`/`terminado`), **pattern_id** opcional → patterns (SET NULL).
 - `project_counters_notes`: project_id (UNIQUE, CASCADE), **row_count** (equivale a "filas"), **target_rows** opcional (vuelta objetivo del RowCounter), notes. Se crea en la misma transacción que el proyecto.
 - Sin `updated_at` (descartado por la autora).
 
 ## API REST
 - `/api/auth`: registro y login (bcrypt + JWT).
 - `/api/products`: listar, filtrar por categoría, detalle. Crear/editar solo admin.
+- `/api/patterns`: listar (filtrar por dificultad) y detalle, públicos. Crear/editar solo admin.
 - `/api/projects`: CRUD de los proyectos del usuario autenticado.
 - `/api/projects/:id/counter`: leer, incrementar, decrementar, resetear y actualizar notas.
 - `/api/orders`: crear pedido y ver historial del usuario.
@@ -62,7 +67,7 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 - Nunca devolver el hash de la contraseña en una respuesta.
 
 ## Frontend
-- Rutas: inicio/tienda, detalle de producto, carrito, login/registro, checkout, historial de pedidos, mis proyectos, crear/editar proyecto, vista de trabajo del proyecto, perfil, 404 y panel admin simple.
+- Rutas: inicio/tienda, detalle de producto, patrones (listado y detalle), carrito, login/registro, checkout, historial de pedidos, mis proyectos, crear/editar proyecto, vista de trabajo del proyecto, perfil, 404 y panel admin simple.
 - Pinia para usuario y carrito (carrito persistido en localStorage). Guards de Vue Router en rutas privadas.
 - Contador con **actualización optimista**: actualizar la pantalla al instante, enviar la petición en segundo plano y revertir si falla.
 - Notas con **debounce** (~800 ms) en vez de una petición por tecla.
@@ -91,8 +96,7 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - **Paso 1 hecho.** `backend/` con Express 5 + pg + dotenv + cors, ES Modules (`"type": "module"`). Archivos: `src/server.js` (arranque, carga `.env`), `src/app.js` (Express y rutas), `src/db/pool.js` (Pool de pg, helper `query` y `testConnection`). Carpetas `routes/`, `controllers/`, `services/`, `middleware/` creadas y vacías. Endpoints de prueba: `GET /api/health` y `GET /api/health/db`. Conexión a `buclees_db` comprobada. Scripts: `npm run dev` (node --watch) y `npm start`. `.gitignore` en la raíz; `.env.example` como plantilla.
 - **Paso 2 hecho. Migraciones aplicadas:** SQL plano en `backend/migrations/NNN_nombre.sql`, ejecutado por `src/db/migrate.js` (cada migración en su transacción, registradas en `schema_migrations`). Comandos: `npm run migrate`, `npm run migrate:status`, `npm run migrate:new -- nombre`. Solo hacia delante: para cambiar algo aplicado se crea una migración nueva.
 - El 25/10/2026 se eliminó un esquema anterior creado por otro asistente (`001_initial_schema.sql`, sin archivo fuente, con 6 productos de prueba) y se sustituyó por las migraciones 001…006.
-- **Seed** (`npm run seed`, `src/db/seed.js`): vacía todas las tablas (TRUNCATE … RESTART IDENTITY) y carga datos de prueba en una transacción; se niega a ejecutarse con NODE_ENV=production. Crea la admin con `ADMIN_NAME/ADMIN_EMAIL/ADMIN_PASSWORD` de `.env` (falla si faltan), usuarios de prueba `ana@buclees.test` (3 proyectos, 1 pedido) y `lucia@buclees.test` (vacía, para estados vacíos), ambos con contraseña `Prueba123!`, y 12 productos (uno inactivo). Contraseñas con bcryptjs (coste 10).
-- **Decisión abierta (paso 6, pedidos):** los patrones son digitales, pero la tabla obliga a tener stock y el pedido lo descuenta. En el seed llevan stock 999 como apaño provisional.
+- **Seed** (`npm run seed`, `src/db/seed.js`): vacía todas las tablas (TRUNCATE … RESTART IDENTITY) y carga datos de prueba en una transacción; se niega a ejecutarse con NODE_ENV=production. Crea la admin con `ADMIN_NAME/ADMIN_EMAIL/ADMIN_PASSWORD` de `.env` (falla si faltan), usuarios de prueba `ana@buclees.test` (3 proyectos, 1 pedido) y `lucia@buclees.test` (vacía, para estados vacíos), ambos con contraseña `Prueba123!`, 10 productos (5 ovillos, uno inactivo; 2 kits enlazados a su patrón; 3 accesorios) y 4 patrones. Contraseñas con bcryptjs (coste 10).
 - **Siguiente:** paso 3, autenticación. Repositorio en GitHub (privado): https://github.com/laurapaddilla/buclees, rama `main` enlazada a `origin/main`. Revisar la normativa de `docs/` (PDF) para la memoria.
 
 ## Documentación del TFG

@@ -34,19 +34,13 @@ const products = [
     description: 'Edición limitada retirada de la tienda (sirve para probar is_active).',
     fiber: 'Lana y alpaca', yarn_weight: 'Worsted', meters: '160 m / 100 g', hook_size: '5 mm' },
 
-  // Patrones (los sube Buclees). Son digitales: el stock es simbólico, ver CLAUDE.md.
-  { title: 'Pulpo amigurumi', category: 'patron', price: 0, stock: 999,
-    description: 'Tu primer amigurumi: anillo mágico, aumentos y disminuciones paso a paso.',
-    difficulty: 'principiante', hook_size: '4 mm', yarn_weight: 'DK' },
-  { title: 'Bolso de mercado', category: 'patron', price: 3.9, stock: 999,
-    description: 'Bolso de malla resistente para la compra, en una tarde.',
-    difficulty: 'principiante', hook_size: '5 mm', yarn_weight: 'Worsted' },
-  { title: 'Manta de granny squares', category: 'patron', price: 5.9, stock: 999,
-    description: 'Cuadrados clásicos unidos en una manta de colores.',
-    difficulty: 'intermedio', hook_size: '4,5 mm', yarn_weight: 'Worsted' },
-  { title: 'Jersey calado', category: 'patron', price: 7.5, stock: 999,
-    description: 'Jersey de punto calado con canesú redondo, tallas XS a XL.',
-    difficulty: 'avanzado', hook_size: '3,5 mm', yarn_weight: 'Fingering' },
+  // Kits: lana + patrón. { pattern } es el título del patrón que incluyen.
+  { title: 'Kit pulpo amigurumi', category: 'kit', price: 14.9, stock: 12, pattern: 'Pulpo amigurumi',
+    description: 'Dos ovillos de algodón DK, ganchillo de 4 mm, ojos de seguridad y el patrón del pulpo.',
+    yarn_weight: 'DK', hook_size: '4 mm' },
+  { title: 'Kit manta granny', category: 'kit', price: 39.9, stock: 6, pattern: 'Manta de granny squares',
+    description: 'Ocho ovillos de merino en cuatro colores y el patrón de la manta.',
+    yarn_weight: 'Worsted', hook_size: '4,5 mm' },
 
   // Accesorios
   { title: 'Ganchillo ergonómico 4 mm', category: 'accesorio', price: 6.5, stock: 20,
@@ -54,8 +48,20 @@ const products = [
     hook_size: '4 mm' },
   { title: 'Marcadores de puntos (20 u.)', category: 'accesorio', price: 2.75, stock: 50,
     description: 'Marcadores de colores con cierre para señalar inicios de vuelta y aumentos.' },
-  { title: 'Kit de iniciación', category: 'accesorio', price: 16.5, stock: 12,
-    description: 'Tres ovillos de algodón DK, ganchillo de 4 mm, marcadores y el patrón del pulpo.' },
+  { title: 'Bolsa de almacenaje', category: 'accesorio', price: 12.5, stock: 10,
+    description: 'Bolsa de algodón con bolsillos para ovillos, ganchillos y la labor en curso.' },
+];
+
+// Patrones gratuitos de Buclees (no se venden: se consultan y se enlazan a proyectos y kits).
+const patterns = [
+  { title: 'Pulpo amigurumi', difficulty: 'principiante', hook_size: '4 mm', yarn_weight: 'DK',
+    description: 'Tu primer amigurumi: anillo mágico, aumentos y disminuciones paso a paso.' },
+  { title: 'Bolso de mercado', difficulty: 'principiante', hook_size: '5 mm', yarn_weight: 'Worsted',
+    description: 'Bolso de malla resistente para la compra, en una tarde.' },
+  { title: 'Manta de granny squares', difficulty: 'intermedio', hook_size: '4,5 mm', yarn_weight: 'Worsted',
+    description: 'Cuadrados clásicos unidos en una manta de colores.' },
+  { title: 'Jersey calado', difficulty: 'avanzado', hook_size: '3,5 mm', yarn_weight: 'Fingering',
+    description: 'Jersey de punto calado con canesú redondo, tallas XS a XL.' },
 ];
 
 // Proyectos de Ana: { pattern } es el título del patrón enlazado.
@@ -69,7 +75,7 @@ const anaProjects = [
 ];
 
 // Pedido entregado de Ana: { título del producto: cantidad }.
-const anaOrder = { 'Algodón DK': 3, 'Pulpo amigurumi': 1, 'Marcadores de puntos (20 u.)': 1 };
+const anaOrder = { 'Algodón DK': 3, 'Kit pulpo amigurumi': 1, 'Marcadores de puntos (20 u.)': 1 };
 
 function getAdminFromEnv() {
   const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
@@ -97,7 +103,7 @@ async function seed() {
 
     // Vacía las tablas y reinicia los ids para empezar siempre desde 1.
     await client.query(`
-      TRUNCATE project_counters_notes, projects, order_items, orders, products, users
+      TRUNCATE project_counters_notes, projects, order_items, orders, products, patterns, users
       RESTART IDENTITY CASCADE
     `);
 
@@ -115,17 +121,29 @@ async function seed() {
       userIds[u.email] = rows[0].id;
     }
 
+    // Patrones (antes que los productos: los kits apuntan a ellos)
+    const patternIds = {};
+    for (const pa of patterns) {
+      const { rows } = await client.query(
+        `INSERT INTO patterns (title, description, difficulty, hook_size, yarn_weight)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+        [pa.title, pa.description, pa.difficulty, pa.hook_size, pa.yarn_weight],
+      );
+      patternIds[pa.title] = rows[0].id;
+    }
+
     // Productos
     const productIds = {};
     for (const p of products) {
       const { rows } = await client.query(
         `INSERT INTO products
            (title, description, price, category, stock, is_active,
-            difficulty, hook_size, yarn_weight, fiber, meters)
+            hook_size, yarn_weight, fiber, meters, pattern_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING id`,
         [p.title, p.description, p.price, p.category, p.stock, p.is_active ?? true,
-         p.difficulty ?? null, p.hook_size ?? null, p.yarn_weight ?? null, p.fiber ?? null, p.meters ?? null],
+         p.hook_size ?? null, p.yarn_weight ?? null, p.fiber ?? null, p.meters ?? null,
+         p.pattern ? patternIds[p.pattern] : null],
       );
       productIds[p.title] = rows[0].id;
     }
@@ -134,9 +152,9 @@ async function seed() {
     const anaId = userIds['ana@buclees.test'];
     for (const pj of anaProjects) {
       const { rows } = await client.query(
-        `INSERT INTO projects (user_id, name, material, status, product_id)
+        `INSERT INTO projects (user_id, name, material, status, pattern_id)
          VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [anaId, pj.name, pj.material, pj.status ?? 'en_curso', pj.pattern ? productIds[pj.pattern] : null],
+        [anaId, pj.name, pj.material, pj.status ?? 'en_curso', pj.pattern ? patternIds[pj.pattern] : null],
       );
       await client.query(
         `INSERT INTO project_counters_notes (project_id, row_count, target_rows, notes)
@@ -170,7 +188,7 @@ async function seed() {
     console.log('Seed completado:');
     console.log(`  admin:    ${admin.email} (contraseña de .env)`);
     for (const u of testUsers) console.log(`  usuario:  ${u.email} / ${TEST_PASSWORD}`);
-    console.log(`  ${products.length} productos, ${anaProjects.length} proyectos, 1 pedido`);
+    console.log(`  ${products.length} productos, ${patterns.length} patrones, ${anaProjects.length} proyectos, 1 pedido`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
