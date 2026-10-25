@@ -118,3 +118,14 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 
 ## Documentación del TFG
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).
+
+- **Guion de la memoria** (Claude Docs): https://claude.ai/artifact/4nDEHBnQmcQhCskQqcnzdD. Sigue la estructura de la normativa con material por apartado. Hay que actualizarlo al terminar cada bloque.
+- **La memoria la redacta la autora.** La normativa (punto 4) exige que sea original y de elaboración propia, y la pasa por un antiplagio. Claude aporta material, datos, diagramas de referencia y revisión, nunca el texto final.
+- **Puntos clave de la normativa:**
+  - Memoria de 30-60 páginas, en Arial 11 con interlineado 1,5, entregada en Word y en PDF con la plantilla oficial.
+  - Sin código ni definiciones teóricas en la memoria.
+  - Obligatorios: estado del arte, Gantt (estimado y real), DAFO, diagramas E-R, de casos de uso y de clases, pruebas de caja negra, bibliografía APA y los anexos con el manual de instalación y el de usuario.
+  - Las librerías que no están en la tabla de tecnologías de ILERNA hay que justificarlas (Vite, Pinia, Vue Router, zod, JWT, bcryptjs, pg…).
+  - Vídeo de defensa de 15-25 minutos, sin cortes, con diapositivas y demostración en directo.
+  - Peso en la nota: vídeo 50 %, código 20 %, memoria 30 %.
+- **Pendiente de la autora:** confirmar qué tecnologías nombró en la propuesta aprobada, y consultar con su tutor/a cómo declarar el uso de asistentes de IA.
