@@ -1,0 +1,92 @@
+/* Estilos generales de la web. Solo variables de tokens.css: nada de colores ni tamaños a mano. */
+
+body {
+  padding: 0; /* buclees.css pone padding en body para sus vistas previas; aquí lo gestiona el layout */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--oliva-strong);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Contenedor de página: gutter de space-4 en móvil, más aire en pantallas grandes. */
+.page {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: var(--space-8) var(--space-6) var(--space-12);
+  }
+}
+
+.page-title {
+  margin: 0 0 var(--space-2);
+}
+
+.page-intro {
+  margin: 0 0 var(--space-8);
+  color: var(--ink-muted);
+}
+
+/* Tarjeta de formulario (login, registro). */
+.form-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: var(--space-6);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.form-card form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-card .bc-field {
+  max-width: none;
+}
+
+.form-card .bc-btn {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.form-card__foot {
+  margin: var(--space-6) 0 0;
+  text-align: center;
+}
+
+/* Mensaje de error general (además de los errores por campo). */
+.form-error {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius-md);
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* Las clases de texto de tokens.css (.h1, .body…) no quitan el margen de los encabezados. */
+h1,
+h2,
+h3 {
+  margin: 0;
+}

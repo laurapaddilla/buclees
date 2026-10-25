@@ -4,6 +4,7 @@ const email = z
   .string({ error: 'Escribe tu email' })
   .trim()
   .toLowerCase()
+  .min(1, { error: 'Escribe tu email' })
   .pipe(z.email({ error: 'Escribe un email válido' }).max(255, { error: 'El email es demasiado largo' }));
 
 // z.object descarta los campos que no están en el esquema: si alguien envía
