@@ -12,6 +12,7 @@ const route = useRoute();
 // Vue Router solo marca como activo un enlace si las rutas están anidadas; /taller/:id no lo está,
 // así que la sección se calcula por la dirección.
 const inTaller = computed(() => route.path.startsWith('/taller'));
+const inTutorials = computed(() => route.path.startsWith('/tutoriales'));
 
 function logout() {
   auth.logout();
@@ -30,6 +31,7 @@ function logout() {
 
       <nav class="header__nav" aria-label="Principal">
         <RouterLink to="/" class="header__link">Tienda</RouterLink>
+        <RouterLink to="/tutoriales" :class="['header__link', { 'is-current': inTutorials }]">Tutoriales</RouterLink>
         <RouterLink to="/taller" :class="['header__link', { 'is-current': inTaller }]">Taller</RouterLink>
         <RouterLink v-if="!auth.isAuthenticated" to="/entrar" class="header__link header__link--cta">Entrar</RouterLink>
         <button v-else type="button" class="header__link" @click="logout">Salir</button>
@@ -100,6 +102,16 @@ function logout() {
   color: var(--ink);
   text-decoration: none;
   cursor: pointer;
+}
+
+/* Móviles estrechos: cuatro enlaces caben con menos espacio lateral (la diana sigue midiendo 44px de alto). */
+@media (max-width: 420px) {
+  .header__nav {
+    gap: 0;
+  }
+  .header__link {
+    padding: 0 var(--space-2);
+  }
 }
 
 .header__link:hover {

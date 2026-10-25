@@ -4,6 +4,7 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { pool } from './pool.js';
+import { tutorials } from './seed-tutorials.js';
 
 // Coste de bcrypt: cuántas rondas de cifrado. 10 es el valor habitual (equilibrio seguridad/velocidad).
 const SALT_ROUNDS = 10;
@@ -131,7 +132,7 @@ async function seed() {
     // Vacía las tablas y reinicia los ids para empezar siempre desde 1.
     await client.query(`
       TRUNCATE project_step_progress, pattern_steps, project_counters_notes, projects,
-               order_items, orders, products, patterns, users
+               order_items, orders, products, patterns, users, tutorial_steps, tutorials
       RESTART IDENTITY CASCADE
     `);
 
@@ -147,6 +148,21 @@ async function seed() {
         [u.name, u.email, testHash],
       );
       userIds[u.email] = rows[0].id;
+    }
+
+    // Tutoriales de los puntos básicos, en el orden en que se recomienda aprenderlos
+    for (const [i, tu] of tutorials.entries()) {
+      const { rows } = await client.query(
+        `INSERT INTO tutorials (slug, abbreviation, name, description, position)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+        [tu.slug, tu.abbreviation, tu.name, tu.description, i + 1],
+      );
+      for (const [j, st] of tu.steps.entries()) {
+        await client.query(
+          'INSERT INTO tutorial_steps (tutorial_id, position, title, instructions) VALUES ($1, $2, $3, $4)',
+          [rows[0].id, j + 1, st.title, st.instructions],
+        );
+      }
     }
 
     // Patrones (antes que los productos: los kits apuntan a ellos)
@@ -232,6 +248,7 @@ async function seed() {
     console.log(`  admin:    ${admin.email} (contraseña de .env)`);
     for (const u of testUsers) console.log(`  usuario:  ${u.email} / ${TEST_PASSWORD}`);
     console.log(`  ${products.length} productos, ${patterns.length} patrones, ${anaProjects.length} proyectos, 1 pedido`);
+    console.log(`  ${tutorials.length} tutoriales de puntos básicos`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

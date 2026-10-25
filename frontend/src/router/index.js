@@ -7,6 +7,8 @@ const routes = [
   { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
   { path: '/entrar', name: 'login', component: () => import('@/views/LoginView.vue'), meta: { guestOnly: true } },
   { path: '/registro', name: 'register', component: () => import('@/views/RegisterView.vue'), meta: { guestOnly: true } },
+  { path: '/tutoriales', name: 'tutorials', component: () => import('@/views/TutorialsView.vue') },
+  { path: '/tutoriales/:slug', name: 'tutorial', component: () => import('@/views/TutorialView.vue') },
   { path: '/taller', name: 'taller', component: () => import('@/views/TallerView.vue'), meta: { requiresAuth: true } },
   // "nuevo" va antes que ":id" para que no se interprete como un id.
   { path: '/taller/nuevo', name: 'project-new', component: () => import('@/views/ProjectFormView.vue'), meta: { requiresAuth: true } },
