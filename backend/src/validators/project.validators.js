@@ -67,3 +67,8 @@ export const updateCounterSchema = z
     notes: z.string({ error: 'Las notas deben ser texto' }).max(10000, { error: 'Las notas no pueden pasar de 10 000 caracteres' }).optional(),
   })
   .refine(atLeastOne, atLeastOneMessage);
+
+// Marcar o desmarcar un paso del patrón.
+export const stepDoneSchema = z.object({
+  done: z.boolean({ error: 'Indica si el paso está hecho (true o false)' }),
+});

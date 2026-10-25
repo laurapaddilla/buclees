@@ -47,9 +47,10 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 - `orders`: user_id (RESTRICT), total, status (`pendiente`/`pagado`/`enviado`/`entregado`/`cancelado`). La fecha es created_at.
 - `order_items`: order_id (CASCADE), product_id (RESTRICT), quantity, unit_price, UNIQUE (order_id, product_id).
 - `projects`: user_id (CASCADE), name, material, status (`en_curso`/`terminado`), **pattern_id** opcional → patterns (SET NULL).
+- **Ver el patrón mientras se teje (migración 008, 25/10/2026):** un proyecto sigue un patrón de Buclees **o** un PDF propio, nunca los dos (CHECK). Los patrones de Buclees van **paso a paso en la web**, nunca en PDF: tabla `pattern_steps` (position, title, stitches TEXT[] limitado a las abreviaturas del glosario, instructions) y `project_step_progress` (pasos marcados como hechos por proyecto, N:M). El PDF propio (`projects.pdf_file` y `pdf_name`) se guarda en `backend/uploads/pdfs` (fuera de git), con un nombre aleatorio y un máximo de 10 MB; se comprueba que empiece por `%PDF-`. Los pasos del seed son contenido de ejemplo.
 - `project_counters_notes`: project_id (UNIQUE, CASCADE), **row_count** (equivale a "filas"), **target_rows** opcional (vuelta objetivo del RowCounter), notes. Se crea en la misma transacción que el proyecto.
 - Sin `updated_at` (descartado por la autora).
-- **Contador (decisiones del 25/10/2026):** inspirado en la app Punto Fácil. **Un solo contador por proyecto** (se mantiene la relación 1:1). "Elegir vuelta de inicio" fija `row_count` a cualquier valor (0, 15…); **reiniciar vuelve siempre a 0**. Tendrá más funcionalidades por definir: el esquema crecerá con migraciones nuevas.
+- **Contador (decisiones del 25/10/2026):** inspirado en la app Punto Fácil. **Un solo contador por proyecto** (se mantiene la relación 1:1). **Reiniciar abre un menú**: "Volver a 0" o "Empezar en la vuelta N" (sustituye al botón "Elegir vuelta" y a "Deshacer"). Tendrá más funcionalidades por definir: el esquema crecerá con migraciones nuevas.
 - **Taller Buclees** (ruta frontend `/taller`): sección que agrupa los proyectos, el contador y las funciones que se añadan. En la API las rutas siguen siendo `/api/projects`.
 
 ## API REST
@@ -58,6 +59,7 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 - `/api/patterns`: listar (filtrar por dificultad) y detalle, públicos. Crear/editar solo admin.
 - `/api/projects` (todo con `authRequired`): `GET /`, `POST /` (acepta `start_row` y `target_rows`; crea proyecto y contador en una transacción), `GET /:id`, `PATCH /:id`, `DELETE /:id`. Hecho.
 - `/api/projects/:id/counter`: `GET`, `POST /increment`, `POST /decrement`, `POST /reset` (a 0), `PATCH` (`row_count` para elegir vuelta, `target_rows`, `notes`). Responden `{ counter: { row_count, target_rows, notes } }`. Hecho.
+- `PUT /api/projects/:id/steps/:stepId` `{ done }` marca o desmarca un paso. `PUT /api/projects/:id/pdf` sube el PDF como binario (`Content-Type: application/pdf`, nombre en la cabecera `X-File-Name`; con `express.raw`, sin multer); `GET` lo descarga (con token, `Cache-Control: private, no-store`); `DELETE` lo quita. Hecho.
 - `/api/orders`: crear pedido y ver historial del usuario.
 
 ## Reglas técnicas obligatorias
@@ -109,12 +111,14 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - Vistas: inicio provisional (sin diseño de pantalla todavía), login, registro, Taller provisional y 404. Cabecera con isotipo de 32px en móvil y logo horizontal de 40px desde 640px.
   - Probado en navegador real (Edge + puppeteer, viewport 390px): sin desbordamiento horizontal; recorrido completo de login, errores, recarga, salir, token inválido y 404.
 - **Frontend, bloque 2 hecho: Taller.** Rutas `/taller` (lista agrupada en curso/terminados, estado vacío), `/taller/nuevo` y `/taller/:id/editar` (misma vista `ProjectFormView`; editar permite cambiar el estado, el objetivo y borrar), `/taller/:id` (`ProjectWorkView`).
-  - Contador: `BRowCounter` sin modificar; la vista traduce cada cambio en increment/decrement/reset. **Actualización optimista**: si una petición falla, al terminar las pendientes se vuelve a pedir el valor del servidor y se muestra un aviso. **Deshacer reinicio** durante 8 s (idea de Claude, para no perder la cuenta por un toque accidental). "Elegir vuelta" con un campo que selecciona el número al tocarlo.
+  - Contador: `BRowCounter` con la prop opcional **`resetMenu`** (añadida en `design/` y en la copia del frontend, que son iguales; la versión React no se ha cambiado). Con ella, Reiniciar emite `reset` y la vista abre `ResetDialog` (un `<dialog>` nativo). **Actualización optimista**: si una petición falla, al terminar las pendientes se vuelve a pedir el valor del servidor y se muestra un aviso.
   - Notas: **debounce de 800 ms**, estado "Sin guardar… / Guardando… / Guardado". También se guardan al ir a otra página de la web, al ocultar la pestaña o la app y al recargar o cerrar (`pagehide` + `fetch` con `keepalive`).
   - **Wake Lock** (`composables/useWakeLock.js`): se pide al abrir el contador y otra vez al volver a la pestaña. Solo funciona en HTTPS o localhost (no por la IP local en http).
   - Backend: `GET /api/patterns` (filtro `?difficulty=`) y `GET /api/patterns/:id`, públicos y solo con patrones activos.
   - Probado en navegador (puppeteer, 390px y 1280px): 31 comprobaciones, entre ellas toques rápidos, un fallo de red provocado, deshacer y guardado de notas al navegar y al recargar.
-- **Siguiente:** que la autora lo pruebe y defina las funciones extra del Taller; después, paso 5 (tienda y patrones, incluido el CRUD de admin). Repositorio en GitHub (privado): https://github.com/laurapaddilla/buclees, rama `main` enlazada a `origin/main`. Revisar la normativa de `docs/` (PDF) para la memoria.
+- **Frontend, bloque 3 hecho: patrón junto al contador.** Con patrón, en el móvil (<900 px) el patrón ocupa la pantalla y el contador pasa a `CounterBar`, una barra fija abajo; en escritorio, el contador y las notas van a la izquierda (fijos al hacer scroll) y el patrón a la derecha. `PatternSteps` usa `BTutorialStep` con el botón "Marcar como hecho" (también optimista). `PdfViewer` dibuja el PDF con **pdf.js** (`pdfjs-dist`, hay que justificarlo en la memoria: Chrome en Android no muestra PDF dentro de una página). El formulario tiene tres opciones de patrón: sin patrón, de Buclees o mi PDF.
+- `vite.config.js`: `API_URL` permite apuntar el proxy a otro backend (las pruebas de Claude usan 3001/5174 para no tocar los servidores de la autora en 3000/5173).
+- **Pendiente:** sección de **tutoriales de puntos básicos** (cad, pr, pb, pma, pa, aum, dism, am) con pasos ilustrados o GIF, como la imagen de referencia de la autora (ilustración numerada de las manos tejiendo cadenetas). Las ilustraciones deben ser propias o con licencia y con su fuente citada. Después, el paso 5 (tienda y patrones, con el CRUD de admin, incluidos los pasos).
 
 ## Documentación del TFG
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).

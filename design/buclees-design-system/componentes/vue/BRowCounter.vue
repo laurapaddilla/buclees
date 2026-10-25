@@ -10,8 +10,10 @@ const props = defineProps({
   /** Unidad que se cuenta: «Vuelta», «Punto», «Repetición». */
   label: { type: String, default: 'Vuelta' },
   title: { type: String, default: '' },
+  /** Con resetMenu, Reiniciar emite 'reset' y la vista decide (p. ej. un menú «volver a 0 / empezar en la vuelta…»). */
+  resetMenu: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'reset'])
 const n = ref(props.modelValue ?? props.initial)
 watch(() => props.modelValue, (v) => { if (v !== undefined) n.value = v })
 function set(v) {
@@ -28,7 +30,7 @@ const pct = computed(() => (props.target ? Math.min(100, Math.round((n.value / p
   <section :class="['bc-counter', { 'is-done': done }]" :aria-label="`Contador de ${unit}s`">
     <div class="bc-counter__head">
       <span class="bc-counter__label">{{ title || `${label}s` }}</span>
-      <button type="button" class="bc-counter__reset" aria-label="Reiniciar contador" @click="set(0)">
+      <button type="button" class="bc-counter__reset" aria-label="Reiniciar contador" @click="resetMenu ? emit('reset') : set(0)">
         <BIcon name="reset" :size="18" />Reiniciar
       </button>
     </div>

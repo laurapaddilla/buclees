@@ -31,8 +31,9 @@ const pct = computed(() =>
       <RouterLink :to="`/taller/${project.id}`">{{ project.name }}</RouterLink>
     </h2>
 
-    <p v-if="project.pattern || project.material" class="body-sm project-card__meta">
+    <p v-if="project.pattern || project.pdf || project.material" class="body-sm project-card__meta">
       <span v-if="project.pattern">Patrón: {{ project.pattern.title }}</span>
+      <span v-else-if="project.pdf">Patrón: tu PDF</span>
       <span v-if="project.material">{{ project.material }}</span>
     </p>
 

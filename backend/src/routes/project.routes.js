@@ -1,11 +1,13 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import * as projectController from '../controllers/project.controller.js';
 import { authRequired } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { MAX_PDF_BYTES } from '../utils/uploads.js';
 import {
   createProjectSchema,
   updateProjectSchema,
   updateCounterSchema,
+  stepDoneSchema,
 } from '../validators/project.validators.js';
 
 const router = Router();
@@ -25,5 +27,13 @@ router.post('/:id/counter/increment', projectController.increment);
 router.post('/:id/counter/decrement', projectController.decrement);
 router.post('/:id/counter/reset', projectController.reset);
 router.patch('/:id/counter', validate(updateCounterSchema), projectController.setCounter);
+
+// Pasos del patrón de Buclees marcados como hechos
+router.put('/:id/steps/:stepId', validate(stepDoneSchema), projectController.setStep);
+
+// PDF propio: se sube como binario (máx. 10 MB); express.raw lo deja en req.body como Buffer.
+router.put('/:id/pdf', express.raw({ type: 'application/pdf', limit: MAX_PDF_BYTES }), projectController.uploadPdf);
+router.get('/:id/pdf', projectController.getPdf);
+router.delete('/:id/pdf', projectController.deletePdf);
 
 export default router;

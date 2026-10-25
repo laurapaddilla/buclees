@@ -45,6 +45,10 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ message: 'El cuerpo de la petición no es un JSON válido' });
   }
+  // Cuerpo más grande que el límite (el PDF admite 10 MB; el JSON, 100 KB).
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ message: 'El archivo es demasiado grande. El máximo son 10 MB.' });
+  }
   // Cualquier otro error: se registra en la consola y no se dan detalles internos al cliente.
   console.error(err);
   res.status(500).json({ message: 'Error interno del servidor' });

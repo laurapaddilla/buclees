@@ -53,20 +53,47 @@ const products = [
 ];
 
 // Patrones gratuitos de Buclees (no se venden: se consultan y se enlazan a proyectos y kits).
+// Los pasos son CONTENIDO DE EJEMPLO para probar la web; la autora los sustituirá por sus patrones.
 const patterns = [
   { title: 'Pulpo amigurumi', difficulty: 'principiante', hook_size: '4 mm', yarn_weight: 'DK',
-    description: 'Tu primer amigurumi: anillo mágico, aumentos y disminuciones paso a paso.' },
+    description: 'Tu primer amigurumi: anillo mágico, aumentos y disminuciones paso a paso.',
+    steps: [
+      { title: 'Anillo mágico', stitches: ['am', 'pb'], instructions: 'Haz un anillo mágico y teje 6 pb dentro. Tira de la hebra para cerrarlo (6).' },
+      { title: 'Vuelta 2: aumentos', stitches: ['aum'], instructions: 'Haz un aumento en cada punto (12).' },
+      { title: 'Vuelta 3', stitches: ['pb', 'aum'], instructions: 'Teje *1 pb, 1 aum* y repite 6 veces (18).' },
+      { title: 'Vueltas 4 a 9: la cabeza', stitches: ['pb'], instructions: 'Teje 1 pb en cada punto durante 6 vueltas (18).' },
+      { title: 'Vuelta 10: cierre', stitches: ['pb', 'dism'], instructions: 'Teje *1 pb, 1 dism* y repite 6 veces. Rellena la cabeza antes de cerrar (12).' },
+      { title: 'Tentáculos', stitches: ['cad', 'pb', 'pr'], instructions: 'Teje 15 cad, vuelve con 1 pb en cada cadeneta y une al cuerpo con 1 pr. Repite hasta tener 8 tentáculos (8).' },
+    ] },
   { title: 'Bolso de mercado', difficulty: 'principiante', hook_size: '5 mm', yarn_weight: 'Worsted',
-    description: 'Bolso de malla resistente para la compra, en una tarde.' },
+    description: 'Bolso de malla resistente para la compra, en una tarde.',
+    steps: [
+      { title: 'Base', stitches: ['cad', 'pb'], instructions: 'Teje 31 cad y vuelve con 1 pb en cada cadeneta, empezando en la segunda (30).' },
+      { title: 'Vuelta de malla', stitches: ['cad', 'pb'], instructions: 'Teje *5 cad, salta 2 puntos, 1 pb* hasta el final de la vuelta (10 arcos).' },
+      { title: 'Cuerpo', stitches: ['cad', 'pb'], instructions: 'Repite la vuelta de malla trabajando dentro de los arcos hasta que mida 35 cm (10 arcos).' },
+      { title: 'Asas', stitches: ['pb'], instructions: 'Teje 8 vueltas de pb sobre 10 puntos a cada lado y une los extremos con costura (10).' },
+    ] },
   { title: 'Manta de granny squares', difficulty: 'intermedio', hook_size: '4,5 mm', yarn_weight: 'Worsted',
-    description: 'Cuadrados clásicos unidos en una manta de colores.' },
+    description: 'Cuadrados clásicos unidos en una manta de colores.',
+    steps: [
+      { title: 'Centro del cuadrado', stitches: ['am', 'cad', 'pa', 'pr'], instructions: 'Haz un anillo mágico, 3 cad y 2 pa. Teje *2 cad, 3 pa* 3 veces, 2 cad y cierra con 1 pr (12 pa).' },
+      { title: 'Vuelta 2: esquinas', stitches: ['pa', 'cad'], instructions: 'En cada arco de esquina teje 3 pa, 2 cad, 3 pa (24 pa).' },
+      { title: 'Vuelta 3: lados', stitches: ['pa', 'cad'], instructions: 'En las esquinas teje 3 pa, 2 cad, 3 pa, y 3 pa en cada arco del lado (36 pa).' },
+      { title: 'Unión', stitches: ['pb'], instructions: 'Une los cuadrados por el revés con pb, primero en tiras y después las tiras entre sí (48 cuadrados).' },
+    ] },
   { title: 'Jersey calado', difficulty: 'avanzado', hook_size: '3,5 mm', yarn_weight: 'Fingering',
-    description: 'Jersey de punto calado con canesú redondo, tallas XS a XL.' },
+    description: 'Jersey de punto calado con canesú redondo, tallas XS a XL.',
+    steps: [
+      { title: 'Canesú', stitches: ['cad', 'pr', 'pa'], instructions: 'Teje 96 cad, cierra en redondo con 1 pr y teje una vuelta de pa (96).' },
+      { title: 'Aumentos del canesú', stitches: ['pa', 'aum'], instructions: 'Teje *3 pa, 1 aum* toda la vuelta (120).' },
+      { title: 'Separar las mangas', stitches: ['cad', 'pa'], instructions: 'Teje los pa de la espalda, salta los de la manga y haz 6 cad bajo la sisa. Repite en el otro lado (72).' },
+      { title: 'Cuerpo calado', stitches: ['pa', 'cad'], instructions: 'Teje *1 pa, 1 cad, salta 1 punto* hasta el largo deseado (72).' },
+    ] },
 ];
 
 // Proyectos de Ana: { pattern } es el título del patrón enlazado.
 const anaProjects = [
-  { name: 'Pulpo para Leo', material: 'Algodón DK rosa', pattern: 'Pulpo amigurumi',
+  { name: 'Pulpo para Leo', material: 'Algodón DK rosa', pattern: 'Pulpo amigurumi', stepsDone: 3,
     row_count: 12, target_rows: 20, notes: 'Tentáculos: 8 de 15 cadenetas. Ojos de seguridad de 8 mm.' },
   { name: 'Manta del salón', material: 'Merino Worsted oliva y crema', pattern: 'Manta de granny squares',
     row_count: 37, target_rows: null, notes: 'Llevo 14 cuadrados de 48.' },
@@ -103,7 +130,8 @@ async function seed() {
 
     // Vacía las tablas y reinicia los ids para empezar siempre desde 1.
     await client.query(`
-      TRUNCATE project_counters_notes, projects, order_items, orders, products, patterns, users
+      TRUNCATE project_step_progress, pattern_steps, project_counters_notes, projects,
+               order_items, orders, products, patterns, users
       RESTART IDENTITY CASCADE
     `);
 
@@ -130,6 +158,13 @@ async function seed() {
         [pa.title, pa.description, pa.difficulty, pa.hook_size, pa.yarn_weight],
       );
       patternIds[pa.title] = rows[0].id;
+      for (const [i, st] of pa.steps.entries()) {
+        await client.query(
+          `INSERT INTO pattern_steps (pattern_id, position, title, stitches, instructions)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [rows[0].id, i + 1, st.title, st.stitches, st.instructions],
+        );
+      }
     }
 
     // Productos
@@ -161,6 +196,14 @@ async function seed() {
          VALUES ($1, $2, $3, $4)`,
         [rows[0].id, pj.row_count, pj.target_rows, pj.notes],
       );
+      // Los primeros pasos del patrón, marcados como hechos.
+      if (pj.stepsDone) {
+        await client.query(
+          `INSERT INTO project_step_progress (project_id, step_id)
+           SELECT $1, id FROM pattern_steps WHERE pattern_id = $2 AND position <= $3`,
+          [rows[0].id, patternIds[pj.pattern], pj.stepsDone],
+        );
+      }
     }
 
     // Pedido de Ana: precios y total salen de la BD, igual que hará la API.

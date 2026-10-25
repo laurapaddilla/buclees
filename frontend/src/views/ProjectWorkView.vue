@@ -1,7 +1,7 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { BBadge, BButton, BInput, BRowCounter } from '@/design-system/components/index.js';
+import { BBadge, BRowCounter } from '@/design-system/components/index.js';
 import {
   decrementCounter,
   getCounter,
@@ -12,6 +12,10 @@ import {
 } from '@/services/projects.js';
 import { useWakeLock } from '@/composables/useWakeLock.js';
 import { DIFFICULTY, STATUS_LABELS } from '@/utils/labels.js';
+import CounterBar from '@/components/CounterBar.vue';
+import ResetDialog from '@/components/ResetDialog.vue';
+import PatternSteps from '@/components/PatternSteps.vue';
+import PdfViewer from '@/components/PdfViewer.vue';
 
 const route = useRoute();
 const id = route.params.id;
@@ -19,6 +23,11 @@ const id = route.params.id;
 const project = ref(null);
 const loading = ref(true);
 const loadError = ref('');
+
+// Con patrón (pasos de Buclees o PDF propio), el patrón ocupa la pantalla y en el móvil
+// el contador baja a una barra fija.
+const steps = computed(() => project.value?.pattern?.steps ?? []);
+const hasPattern = computed(() => steps.value.length > 0 || Boolean(project.value?.pdf));
 
 // ---------- Contador con actualización optimista ----------
 // La pantalla cambia al instante; la petición va en segundo plano.
@@ -56,59 +65,41 @@ async function send(request) {
   }
 }
 
-// BRowCounter avisa del nuevo valor; aquí se decide qué petición enviar.
-function onCounterChange(value) {
+// Recibe el nuevo valor (de BRowCounter o de la barra) y envía la petición que corresponde.
+function applyCount(value) {
   const previous = lastValue;
-  if (value === previous) return;
-  lastValue = value;
+  if (value === previous || value < 0) return;
+  count.value = lastValue = value;
   counterError.value = '';
-
   if (value === previous + 1) send(() => incrementCounter(id));
   else if (value === previous - 1) send(() => decrementCounter(id));
-  else if (value === 0) {
-    offerUndo(previous);
-    send(() => resetCounter(id));
-  }
 }
 
-// ---------- Deshacer el reinicio ----------
-// Reiniciar sin querer a mitad de una labor es fácil; durante unos segundos se puede deshacer.
-const undoValue = ref(null);
-let undoTimer = null;
+// ---------- Reiniciar: volver a 0 o empezar en otra vuelta ----------
+const resetOpen = ref(false);
+const resetError = ref('');
 
-function offerUndo(previous) {
-  clearTimeout(undoTimer);
-  undoValue.value = previous;
-  undoTimer = setTimeout(() => (undoValue.value = null), 8000);
+function openReset() {
+  resetError.value = '';
+  resetOpen.value = true;
 }
 
-async function undoReset() {
-  const value = undoValue.value;
-  undoValue.value = null;
-  clearTimeout(undoTimer);
-  count.value = lastValue = value;
-  await send(() => updateCounter(id, { row_count: value }));
+function resetToZero() {
+  resetOpen.value = false;
+  count.value = lastValue = 0;
+  counterError.value = '';
+  send(() => resetCounter(id));
 }
 
-// ---------- Elegir vuelta ----------
-const choosing = ref(false);
-const chosenRow = ref('');
-const chooseError = ref('');
-
-function openChoose() {
-  chosenRow.value = String(count.value);
-  chooseError.value = '';
-  choosing.value = true;
-}
-
-async function saveChosenRow() {
-  chooseError.value = '';
+async function startAt(row) {
+  resetError.value = '';
   try {
-    const counter = await updateCounter(id, { row_count: chosenRow.value === '' ? null : Number(chosenRow.value) });
+    const counter = await updateCounter(id, { row_count: row });
     count.value = lastValue = counter.row_count;
-    choosing.value = false;
+    counterError.value = '';
+    resetOpen.value = false;
   } catch (err) {
-    chooseError.value = err.fieldErrors?.row_count ?? err.message;
+    resetError.value = err.fieldErrors?.row_count ?? err.message;
   }
 }
 
@@ -171,7 +162,6 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  clearTimeout(undoTimer);
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('pagehide', flushNotes);
   // Al ir a otra página de la web con notas sin guardar, se guardan ya.
@@ -180,7 +170,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="page work">
+  <section :class="['page', 'work', { 'has-pattern': hasPattern }]">
     <RouterLink to="/taller" class="body-sm back-link">← Taller</RouterLink>
 
     <p v-if="loading" class="notice" aria-live="polite">Cargando tu proyecto…</p>
@@ -209,48 +199,63 @@ onBeforeUnmount(() => {
       </header>
 
       <div class="work__layout">
-        <div class="work__counter">
-          <BRowCounter v-model="count" :target="target" label="Vuelta" @change="onCounterChange" />
-
-          <p v-if="counterError" class="save-status is-error" role="alert">{{ counterError }}</p>
-
-          <div v-if="undoValue !== null" class="undo" role="status">
-            <span>Contador reiniciado.</span>
-            <BButton variant="secondary" size="sm" @click="undoReset">Deshacer (vuelta {{ undoValue }})</BButton>
+        <!-- Columna del contador y las notas -->
+        <div class="work__side">
+          <div class="work__counter">
+            <BRowCounter
+              :model-value="count"
+              :target="target"
+              label="Vuelta"
+              reset-menu
+              @update:model-value="applyCount"
+              @reset="openReset"
+            />
+            <p v-if="counterError" class="save-status is-error" role="alert">{{ counterError }}</p>
+            <p v-if="wakeLock.active.value" class="caption work__awake">La pantalla se mantendrá encendida mientras cuentas.</p>
           </div>
 
-          <form v-if="choosing" class="choose" novalidate @submit.prevent="saveChosenRow">
-            <BInput
-              v-model="chosenRow"
-              label="Ir a la vuelta"
-              type="number"
-              inputmode="numeric"
-              min="0"
-              :error="chooseError"
-              @focus="$event.target.select()"
+          <div class="work__notes">
+            <label for="notes" class="h3 work__notes-title">Notas</label>
+            <textarea
+              id="notes"
+              v-model="notes"
+              class="field-control"
+              placeholder="Cambios de color, puntos que te saltas, dudas del patrón…"
+              maxlength="10000"
             />
-            <div class="choose__actions">
-              <BButton type="submit" size="sm">Guardar</BButton>
-              <BButton variant="ghost" size="sm" @click="choosing = false">Cancelar</BButton>
-            </div>
-          </form>
-          <BButton v-else variant="secondary" class="work__choose" @click="openChoose">Elegir vuelta</BButton>
-
-          <p v-if="wakeLock.active.value" class="caption work__awake">La pantalla se mantendrá encendida mientras cuentas.</p>
+            <p :class="['body-sm', 'save-status', { 'is-error': notesError }]" aria-live="polite">{{ notesStatus }}</p>
+          </div>
         </div>
 
-        <div class="work__notes">
-          <label for="notes" class="h3 work__notes-title">Notas</label>
-          <textarea
-            id="notes"
-            v-model="notes"
-            class="field-control"
-            placeholder="Cambios de color, puntos que te saltas, dudas del patrón…"
-            maxlength="10000"
-          />
-          <p :class="['body-sm', 'save-status', { 'is-error': notesError }]" aria-live="polite">{{ notesStatus }}</p>
-        </div>
+        <!-- Patrón: pasos de Buclees o PDF propio -->
+        <section v-if="hasPattern" class="work__pattern" aria-labelledby="pattern-title">
+          <h2 id="pattern-title" class="h3 work__pattern-title">
+            {{ project.pdf ? 'Tu patrón' : project.pattern.title }}
+          </h2>
+          <PatternSteps v-if="steps.length" :project-id="id" :steps="steps" />
+          <PdfViewer v-else :project-id="id" :name="project.pdf.name" />
+        </section>
       </div>
+
+      <!-- Móvil con patrón: contador fijo abajo para contar mientras lees -->
+      <CounterBar
+        v-if="hasPattern"
+        class="work__bar"
+        :value="count"
+        :target="target"
+        @increment="applyCount(count + 1)"
+        @decrement="applyCount(count - 1)"
+        @reset="openReset"
+      />
+
+      <ResetDialog
+        :open="resetOpen"
+        :current="count"
+        :error="resetError"
+        @zero="resetToZero"
+        @start="startAt"
+        @close="resetOpen = false"
+      />
     </template>
   </section>
 </template>
@@ -288,17 +293,15 @@ onBeforeUnmount(() => {
   margin-left: calc(-1 * var(--space-4));
 }
 
-/* Móvil: contador arriba y notas debajo. Escritorio: lado a lado. */
 .work__layout {
   display: grid;
   gap: var(--space-8);
 }
 
-@media (min-width: 768px) {
-  .work__layout {
-    grid-template-columns: minmax(300px, 400px) 1fr;
-    align-items: start;
-  }
+.work__side {
+  display: grid;
+  gap: var(--space-8);
+  align-content: start;
 }
 
 .work__counter {
@@ -309,37 +312,6 @@ onBeforeUnmount(() => {
 
 .work__counter :deep(.bc-counter) {
   max-width: none;
-}
-
-.work__choose {
-  align-self: stretch;
-}
-
-.undo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--amarillo-soft);
-  color: var(--amarillo-text);
-  border-radius: var(--radius-md);
-  font-weight: 700;
-}
-
-.choose {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--surface-200);
-  border-radius: var(--radius-md);
-}
-
-.choose__actions {
-  display: flex;
-  gap: var(--space-2);
 }
 
 .work__awake {
@@ -356,5 +328,45 @@ onBeforeUnmount(() => {
 
 .work__notes textarea {
   min-height: 220px;
+}
+
+.work__pattern-title {
+  margin-bottom: var(--space-4);
+}
+
+/* ----- Sin patrón: contador y notas lado a lado en pantallas medianas ----- */
+@media (min-width: 768px) {
+  .work:not(.has-pattern) .work__side {
+    grid-template-columns: minmax(300px, 400px) 1fr;
+  }
+}
+
+/* ----- Con patrón, en el móvil: patrón primero, notas debajo y la barra fija abajo ----- */
+@media (max-width: 899px) {
+  .has-pattern .work__counter {
+    display: none;
+  }
+  .has-pattern .work__side {
+    order: 2;
+  }
+  /* Hueco para que la barra fija no tape el final de la página. */
+  .work.has-pattern {
+    padding-bottom: calc(var(--space-12) + 96px);
+  }
+}
+
+/* ----- Con patrón, en escritorio: contador y notas a la izquierda (fijos al hacer scroll), patrón a la derecha ----- */
+@media (min-width: 900px) {
+  .has-pattern .work__layout {
+    grid-template-columns: minmax(300px, 360px) 1fr;
+    align-items: start;
+  }
+  .has-pattern .work__side {
+    position: sticky;
+    top: var(--space-4);
+  }
+  .work__bar {
+    display: none;
+  }
 }
 </style>

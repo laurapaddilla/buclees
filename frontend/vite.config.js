@@ -12,8 +12,9 @@ export default defineConfig({
     port: 5173,
     // En desarrollo, las peticiones a /api se reenvían al backend (puerto 3000).
     // Así el frontend usa rutas relativas ('/api/...') y el navegador no ve dos orígenes distintos.
+    // API_URL permite apuntar a otro backend (por ejemplo, uno de pruebas en otro puerto).
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': process.env.API_URL || 'http://localhost:3000',
     },
   },
 });

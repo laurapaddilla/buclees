@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import { api, apiBytes, apiUpload } from './api.js';
 
 // Proyectos del Taller y su contador. Cada función devuelve ya el dato que interesa.
 
@@ -15,3 +15,13 @@ export const resetCounter = async (id) => (await api(`/projects/${id}/counter/re
 // Fijar vuelta, objetivo o notas: { row_count?, target_rows?, notes? }
 export const updateCounter = async (id, data, { keepalive = false } = {}) =>
   (await api(`/projects/${id}/counter`, { method: 'PATCH', body: data, keepalive })).counter;
+
+// Pasos del patrón de Buclees: marcar o desmarcar como hecho.
+export const setStepDone = async (id, stepId, done) =>
+  (await api(`/projects/${id}/steps/${stepId}`, { method: 'PUT', body: { done } })).step;
+
+// PDF propio del proyecto.
+export const MAX_PDF_MB = 10;
+export const uploadPdf = async (id, file) => (await apiUpload(`/projects/${id}/pdf`, file)).pdf;
+export const getPdfBytes = (id) => apiBytes(`/projects/${id}/pdf`);
+export const deletePdf = (id) => api(`/projects/${id}/pdf`, { method: 'DELETE' });
