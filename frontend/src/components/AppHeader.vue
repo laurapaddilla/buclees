@@ -49,7 +49,7 @@ function logout() {
       </div>
 
       <nav id="menu-principal" :class="['header__nav', { 'is-open': menuOpen }]" aria-label="Principal">
-        <RouterLink to="/" class="header__link">Tienda</RouterLink>
+        <RouterLink to="/tienda" class="header__link">Tienda</RouterLink>
         <RouterLink to="/patrones" :class="['header__link', { 'is-current': inPatterns }]">Patrones</RouterLink>
         <RouterLink to="/tutoriales" :class="['header__link', { 'is-current': inTutorials }]">Tutoriales</RouterLink>
         <RouterLink to="/taller" :class="['header__link', { 'is-current': inTaller }]">Taller</RouterLink>
