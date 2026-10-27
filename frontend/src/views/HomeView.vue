@@ -416,6 +416,7 @@ function followCardLink(event) {
 .tile__preview--chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--space-1);
   min-height: 40px;
 }
