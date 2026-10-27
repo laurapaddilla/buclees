@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BBadge, BRowCounter } from '@/design-system/components/index.js';
 import {
+  chooseSection,
+  completeSection,
   decrementCounter,
   getCounter,
   getProject,
@@ -14,7 +16,7 @@ import { useWakeLock } from '@/composables/useWakeLock.js';
 import { DIFFICULTY, STATUS_LABELS } from '@/utils/labels.js';
 import CounterBar from '@/components/CounterBar.vue';
 import ResetDialog from '@/components/ResetDialog.vue';
-import PatternSteps from '@/components/PatternSteps.vue';
+import PatternGuide from '@/components/PatternGuide.vue';
 import PdfViewer from '@/components/PdfViewer.vue';
 
 const route = useRoute();
@@ -26,8 +28,52 @@ const loadError = ref('');
 
 // Con patrón (pasos de Buclees o PDF propio), el patrón ocupa la pantalla y en el móvil
 // el contador baja a una barra fija.
-const steps = computed(() => project.value?.pattern?.steps ?? []);
-const hasPattern = computed(() => steps.value.length > 0 || Boolean(project.value?.pdf));
+const sections = computed(() => project.value?.pattern?.sections ?? []);
+const hasPattern = computed(() => sections.value.length > 0 || Boolean(project.value?.pdf));
+
+// Parte del patrón en curso y repetición (Orejas 2 de 2): se muestran en el contador.
+const sectionId = ref(null);
+const repeatNo = ref(1);
+const currentSection = computed(() => sections.value.find((s) => s.id === sectionId.value) ?? null);
+const sectionContext = computed(() => {
+  const s = currentSection.value;
+  if (!s) return '';
+  return s.repeat_count > 1 ? `${s.title} ${repeatNo.value}/${s.repeat_count}` : s.title;
+});
+
+// Coloca en pantalla el proyecto que devuelve el servidor (al cargar, al elegir o al terminar una parte).
+function showProject(data) {
+  project.value = data;
+  count.value = lastValue = data.counter.row_count;
+  target.value = data.counter.target_rows;
+  sectionId.value = data.counter.section_id;
+  repeatNo.value = data.counter.repeat_no;
+}
+
+// ---------- Partes del patrón ----------
+const sectionBusy = ref(false);
+
+async function chooseSectionPart(partId) {
+  const sec = sections.value.find((s) => s.id === partId);
+  if (!window.confirm(`¿Empezar «${sec.title}»? El contador volverá al principio de esa parte.`)) return;
+  await runSectionAction(() => chooseSection(id, partId));
+}
+
+async function completeCurrentSection() {
+  await runSectionAction(() => completeSection(id));
+}
+
+async function runSectionAction(request) {
+  sectionBusy.value = true;
+  counterError.value = '';
+  try {
+    showProject(await request());
+  } catch (err) {
+    counterError.value = err.message;
+  } finally {
+    sectionBusy.value = false;
+  }
+}
 
 // ---------- Contador con actualización optimista ----------
 // La pantalla cambia al instante; la petición va en segundo plano.
@@ -148,9 +194,7 @@ onMounted(async () => {
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('pagehide', flushNotes);
   try {
-    project.value = await getProject(id);
-    count.value = lastValue = project.value.counter.row_count;
-    target.value = project.value.counter.target_rows;
+    showProject(await getProject(id));
     notes.value = project.value.counter.notes;
     // Se activa el guardado de notas después de cargar el texto inicial.
     setTimeout(() => (notesLoaded = true));
@@ -206,6 +250,7 @@ onBeforeUnmount(() => {
               :model-value="count"
               :target="target"
               label="Vuelta"
+              :title="sectionContext ? `Vueltas · ${sectionContext}` : ''"
               reset-menu
               @update:model-value="applyCount"
               @reset="openReset"
@@ -232,7 +277,17 @@ onBeforeUnmount(() => {
           <h2 id="pattern-title" class="h3 work__pattern-title">
             {{ project.pdf ? 'Tu patrón' : project.pattern.title }}
           </h2>
-          <PatternSteps v-if="steps.length" :project-id="id" :steps="steps" />
+          <PatternGuide
+            v-if="sections.length"
+            :project-id="id"
+            :sections="sections"
+            :current-section-id="sectionId"
+            :repeat-no="repeatNo"
+            :count="count"
+            :busy="sectionBusy"
+            @choose="chooseSectionPart"
+            @complete="completeCurrentSection"
+          />
           <PdfViewer v-else :project-id="id" :name="project.pdf.name" />
         </section>
       </div>
@@ -243,6 +298,7 @@ onBeforeUnmount(() => {
         class="work__bar"
         :value="count"
         :target="target"
+        :context="sectionContext"
         @increment="applyCount(count + 1)"
         @decrement="applyCount(count - 1)"
         @reset="openReset"
@@ -296,6 +352,12 @@ onBeforeUnmount(() => {
 .work__layout {
   display: grid;
   gap: var(--space-8);
+}
+
+/* Una celda de rejilla no se estrecha por debajo de su contenido salvo con min-width: 0.
+   Sin esto, la fila de partes del patrón (que se desliza en horizontal) ensanchaba toda la página en el móvil. */
+.work__layout > * {
+  min-width: 0;
 }
 
 .work__side {

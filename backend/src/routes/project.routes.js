@@ -8,6 +8,7 @@ import {
   updateProjectSchema,
   updateCounterSchema,
   stepDoneSchema,
+  chooseSectionSchema,
 } from '../validators/project.validators.js';
 
 const router = Router();
@@ -27,6 +28,10 @@ router.post('/:id/counter/increment', projectController.increment);
 router.post('/:id/counter/decrement', projectController.decrement);
 router.post('/:id/counter/reset', projectController.reset);
 router.patch('/:id/counter', validate(updateCounterSchema), projectController.setCounter);
+
+// Parte del patrón que estás tejiendo: elegirla y terminarla (o pasar a su siguiente repetición)
+router.post('/:id/section', validate(chooseSectionSchema), projectController.chooseSection);
+router.post('/:id/section/complete', projectController.completeSection);
 
 // Pasos del patrón de Buclees marcados como hechos
 router.put('/:id/steps/:stepId', validate(stepDoneSchema), projectController.setStep);

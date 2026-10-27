@@ -91,3 +91,15 @@ export async function deletePdf(req, res) {
   await projectService.deletePdf(req.user.id, projectId(req));
   res.status(204).end();
 }
+
+// ---------- Partes del patrón ----------
+
+export async function chooseSection(req, res) {
+  const project = await projectService.chooseSection(req.user.id, projectId(req), req.body.section_id);
+  res.json({ project });
+}
+
+export async function completeSection(req, res) {
+  const project = await projectService.completeSection(req.user.id, projectId(req));
+  res.json({ project });
+}

@@ -60,6 +60,15 @@ export const tutorials = [
     ],
   },
   {
+    slug: 'punto-alto-doble', abbreviation: 'pad', name: 'Punto alto doble',
+    description: 'Más alto que el punto alto: pétalos de flores, volantes y calados grandes.',
+    steps: [
+      { title: 'Dos lazadas y entra', instructions: 'Haz dos lazadas y mete el ganchillo en el punto.' },
+      { title: 'Saca una lazada', instructions: 'Haz una lazada y sácala por el punto. Tienes 4 bucles.' },
+      { title: 'Cierra de dos en dos', instructions: 'Haz una lazada y pásala por 2 bucles. Repite dos veces más hasta que quede 1 bucle.' },
+    ],
+  },
+  {
     slug: 'aumento', abbreviation: 'aum', name: 'Aumento',
     description: 'Dos puntos en el mismo punto: así crece una pieza redonda.',
     steps: [
@@ -75,6 +84,15 @@ export const tutorials = [
       { title: 'Empieza en el primer punto', instructions: 'Mete el ganchillo en el punto, haz una lazada y sácala. Tienes 2 bucles.' },
       { title: 'Sigue en el siguiente', instructions: 'Mete el ganchillo en el punto siguiente, haz una lazada y sácala. Tienes 3 bucles.' },
       { title: 'Únelos', instructions: 'Haz una lazada y pásala por los 3 bucles a la vez. Dos puntos se han convertido en uno.' },
+    ],
+  },
+  {
+    slug: 'hebra-trasera', abbreviation: 'ht', name: 'Solo por la hebra trasera',
+    description: 'Tejer por una sola hebra deja una línea marcada: sirve para dar forma y para tejer encima después.',
+    steps: [
+      { title: 'Mira las dos hebras', instructions: 'Arriba de cada punto hay dos hebras en forma de V. La trasera es la que queda más lejos de ti.' },
+      { title: 'Entra solo por la trasera', instructions: 'Mete el ganchillo solo por debajo de la hebra trasera.' },
+      { title: 'Teje el punto', instructions: 'Teje el punto que pida el patrón, por ejemplo 1 pb. La hebra delantera queda libre y forma una línea.' },
     ],
   },
 ];

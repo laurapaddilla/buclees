@@ -85,6 +85,12 @@ onMounted(async () => {
       isEdit.value ? getProject(projectId.value) : null,
     ]);
     patterns.value = patternList;
+    // Desde "Tejer este patrón" (/taller/nuevo?patron=5) el patrón llega ya elegido.
+    const fromPattern = Number(route.query.patron);
+    if (!isEdit.value && patternList.some((p) => p.id === fromPattern)) {
+      form.source = 'buclees';
+      form.pattern_id = fromPattern;
+    }
     if (project) {
       form.name = project.name;
       form.material = project.material ?? '';

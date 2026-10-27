@@ -25,3 +25,9 @@ export const MAX_PDF_MB = 10;
 export const uploadPdf = async (id, file) => (await apiUpload(`/projects/${id}/pdf`, file)).pdf;
 export const getPdfBytes = (id) => apiBytes(`/projects/${id}/pdf`);
 export const deletePdf = (id) => api(`/projects/${id}/pdf`, { method: 'DELETE' });
+
+// Partes del patrón: elegir la que vas a tejer y terminarla (o pasar a su siguiente repetición).
+// Devuelven el proyecto completo actualizado.
+export const chooseSection = async (id, sectionId) =>
+  (await api(`/projects/${id}/section`, { method: 'POST', body: { section_id: sectionId } })).project;
+export const completeSection = async (id) => (await api(`/projects/${id}/section/complete`, { method: 'POST' })).project;

@@ -72,3 +72,11 @@ export const updateCounterSchema = z
 export const stepDoneSchema = z.object({
   done: z.boolean({ error: 'Indica si el paso está hecho (true o false)' }),
 });
+
+// Elegir la parte del patrón que vas a tejer.
+export const chooseSectionSchema = z.object({
+  section_id: z
+    .number({ error: 'Elige una parte del patrón' })
+    .int({ error: 'Elige una parte del patrón' })
+    .positive({ error: 'Elige una parte del patrón' }),
+});

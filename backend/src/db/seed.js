@@ -5,6 +5,7 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { pool } from './pool.js';
 import { tutorials } from './seed-tutorials.js';
+import { patterns } from './seed-patterns.js';
 
 // Coste de bcrypt: cuántas rondas de cifrado. 10 es el valor habitual (equilibrio seguridad/velocidad).
 const SALT_ROUNDS = 10;
@@ -53,51 +54,16 @@ const products = [
     description: 'Bolsa de algodón con bolsillos para ovillos, ganchillos y la labor en curso.' },
 ];
 
-// Patrones gratuitos de Buclees (no se venden: se consultan y se enlazan a proyectos y kits).
-// Los pasos son CONTENIDO DE EJEMPLO para probar la web; la autora los sustituirá por sus patrones.
-const patterns = [
-  { title: 'Pulpo amigurumi', difficulty: 'principiante', hook_size: '4 mm', yarn_weight: 'DK',
-    description: 'Tu primer amigurumi: anillo mágico, aumentos y disminuciones paso a paso.',
-    steps: [
-      { title: 'Anillo mágico', stitches: ['am', 'pb'], instructions: 'Haz un anillo mágico y teje 6 pb dentro. Tira de la hebra para cerrarlo (6).' },
-      { title: 'Vuelta 2: aumentos', stitches: ['aum'], instructions: 'Haz un aumento en cada punto (12).' },
-      { title: 'Vuelta 3', stitches: ['pb', 'aum'], instructions: 'Teje *1 pb, 1 aum* y repite 6 veces (18).' },
-      { title: 'Vueltas 4 a 9: la cabeza', stitches: ['pb'], instructions: 'Teje 1 pb en cada punto durante 6 vueltas (18).' },
-      { title: 'Vuelta 10: cierre', stitches: ['pb', 'dism'], instructions: 'Teje *1 pb, 1 dism* y repite 6 veces. Rellena la cabeza antes de cerrar (12).' },
-      { title: 'Tentáculos', stitches: ['cad', 'pb', 'pr'], instructions: 'Teje 15 cad, vuelve con 1 pb en cada cadeneta y une al cuerpo con 1 pr. Repite hasta tener 8 tentáculos (8).' },
-    ] },
-  { title: 'Bolso de mercado', difficulty: 'principiante', hook_size: '5 mm', yarn_weight: 'Worsted',
-    description: 'Bolso de malla resistente para la compra, en una tarde.',
-    steps: [
-      { title: 'Base', stitches: ['cad', 'pb'], instructions: 'Teje 31 cad y vuelve con 1 pb en cada cadeneta, empezando en la segunda (30).' },
-      { title: 'Vuelta de malla', stitches: ['cad', 'pb'], instructions: 'Teje *5 cad, salta 2 puntos, 1 pb* hasta el final de la vuelta (10 arcos).' },
-      { title: 'Cuerpo', stitches: ['cad', 'pb'], instructions: 'Repite la vuelta de malla trabajando dentro de los arcos hasta que mida 35 cm (10 arcos).' },
-      { title: 'Asas', stitches: ['pb'], instructions: 'Teje 8 vueltas de pb sobre 10 puntos a cada lado y une los extremos con costura (10).' },
-    ] },
-  { title: 'Manta de granny squares', difficulty: 'intermedio', hook_size: '4,5 mm', yarn_weight: 'Worsted',
-    description: 'Cuadrados clásicos unidos en una manta de colores.',
-    steps: [
-      { title: 'Centro del cuadrado', stitches: ['am', 'cad', 'pa', 'pr'], instructions: 'Haz un anillo mágico, 3 cad y 2 pa. Teje *2 cad, 3 pa* 3 veces, 2 cad y cierra con 1 pr (12 pa).' },
-      { title: 'Vuelta 2: esquinas', stitches: ['pa', 'cad'], instructions: 'En cada arco de esquina teje 3 pa, 2 cad, 3 pa (24 pa).' },
-      { title: 'Vuelta 3: lados', stitches: ['pa', 'cad'], instructions: 'En las esquinas teje 3 pa, 2 cad, 3 pa, y 3 pa en cada arco del lado (36 pa).' },
-      { title: 'Unión', stitches: ['pb'], instructions: 'Une los cuadrados por el revés con pb, primero en tiras y después las tiras entre sí (48 cuadrados).' },
-    ] },
-  { title: 'Jersey calado', difficulty: 'avanzado', hook_size: '3,5 mm', yarn_weight: 'Fingering',
-    description: 'Jersey de punto calado con canesú redondo, tallas XS a XL.',
-    steps: [
-      { title: 'Canesú', stitches: ['cad', 'pr', 'pa'], instructions: 'Teje 96 cad, cierra en redondo con 1 pr y teje una vuelta de pa (96).' },
-      { title: 'Aumentos del canesú', stitches: ['pa', 'aum'], instructions: 'Teje *3 pa, 1 aum* toda la vuelta (120).' },
-      { title: 'Separar las mangas', stitches: ['cad', 'pa'], instructions: 'Teje los pa de la espalda, salta los de la manga y haz 6 cad bajo la sisa. Repite en el otro lado (72).' },
-      { title: 'Cuerpo calado', stitches: ['pa', 'cad'], instructions: 'Teje *1 pa, 1 cad, salta 1 punto* hasta el largo deseado (72).' },
-    ] },
-];
-
-// Proyectos de Ana: { pattern } es el título del patrón enlazado.
+// Proyectos de Ana: { pattern } es el título del patrón; { section } la parte por la que va,
+// { repeat } la repetición de esa parte y { sectionsDone } las partes ya terminadas.
+// Con patrón por partes, el objetivo del contador es la última vuelta de la parte.
 const anaProjects = [
-  { name: 'Pulpo para Leo', material: 'Algodón DK rosa', pattern: 'Pulpo amigurumi', stepsDone: 3,
-    row_count: 12, target_rows: 20, notes: 'Tentáculos: 8 de 15 cadenetas. Ojos de seguridad de 8 mm.' },
+  { name: 'Pulpo para Leo', material: 'Algodón DK rosa', pattern: 'Pulpo amigurumi', section: 'Cabeza',
+    row_count: 5, notes: 'Ojos de seguridad de 8 mm entre la V 5 y la V 6.' },
   { name: 'Manta del salón', material: 'Merino Worsted oliva y crema', pattern: 'Manta de granny squares',
-    row_count: 37, target_rows: null, notes: 'Llevo 14 cuadrados de 48.' },
+    section: 'Cuadrado', repeat: 15, row_count: 2, notes: 'Colores: oliva, crema, rosa y mostaza.' },
+  { name: 'Conejita para Vega', material: 'Sport gris y rosa', pattern: 'Conejo durmiente',
+    section: 'Orejas', repeat: 2, row_count: 9, sectionsDone: ['Cabeza'], notes: '' },
   { name: 'Bufanda de invierno', material: 'Chenilla Bulky amarilla', pattern: null, status: 'terminado',
     row_count: 80, target_rows: 80, notes: 'Terminada. Flecos de 10 cm.' },
 ];
@@ -131,7 +97,8 @@ async function seed() {
 
     // Vacía las tablas y reinicia los ids para empezar siempre desde 1.
     await client.query(`
-      TRUNCATE project_step_progress, pattern_steps, project_counters_notes, projects,
+      TRUNCATE project_sections_done, project_step_progress, pattern_steps, pattern_sections,
+               project_counters_notes, projects,
                order_items, orders, products, patterns, users, tutorial_steps, tutorials
       RESTART IDENTITY CASCADE
     `);
@@ -167,19 +134,31 @@ async function seed() {
 
     // Patrones (antes que los productos: los kits apuntan a ellos)
     const patternIds = {};
+    const sections = {}; // 'Patrón/Parte' -> { id, lastRow }
     for (const pa of patterns) {
       const { rows } = await client.query(
-        `INSERT INTO patterns (title, description, difficulty, hook_size, yarn_weight)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [pa.title, pa.description, pa.difficulty, pa.hook_size, pa.yarn_weight],
+        `INSERT INTO patterns (title, description, difficulty, hook_size, yarn_weight, materials, designer, source_url, is_demo)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+        [pa.title, pa.description, pa.difficulty, pa.hook_size, pa.yarn_weight, pa.materials,
+         pa.designer ?? null, pa.source_url ?? null, pa.is_demo ?? false],
       );
       patternIds[pa.title] = rows[0].id;
-      for (const [i, st] of pa.steps.entries()) {
-        await client.query(
-          `INSERT INTO pattern_steps (pattern_id, position, title, stitches, instructions)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [rows[0].id, i + 1, st.title, st.stitches, st.instructions],
+
+      for (const [i, sec] of pa.sections.entries()) {
+        const { rows: [section] } = await client.query(
+          `INSERT INTO pattern_sections (pattern_id, position, title, repeat_count, yarn, note)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          [rows[0].id, i + 1, sec.title, sec.repeat ?? 1, sec.yarn ?? null, sec.note ?? null],
         );
+        const rowEnds = sec.steps.filter((st) => st.rows).map((st) => st.rows[1]);
+        sections[`${pa.title}/${sec.title}`] = { id: section.id, lastRow: rowEnds.length ? Math.max(...rowEnds) : null };
+        for (const [j, st] of sec.steps.entries()) {
+          await client.query(
+            `INSERT INTO pattern_steps (section_id, position, title, row_from, row_to, stitches, instructions)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [section.id, j + 1, st.title ?? null, st.rows?.[0] ?? null, st.rows?.[1] ?? null, st.stitches, st.instructions],
+          );
+        }
       }
     }
 
@@ -207,18 +186,17 @@ async function seed() {
          VALUES ($1, $2, $3, $4, $5) RETURNING id`,
         [anaId, pj.name, pj.material, pj.status ?? 'en_curso', pj.pattern ? patternIds[pj.pattern] : null],
       );
+      const section = pj.section ? sections[`${pj.pattern}/${pj.section}`] : null;
       await client.query(
-        `INSERT INTO project_counters_notes (project_id, row_count, target_rows, notes)
-         VALUES ($1, $2, $3, $4)`,
-        [rows[0].id, pj.row_count, pj.target_rows, pj.notes],
+        `INSERT INTO project_counters_notes (project_id, row_count, target_rows, notes, section_id, repeat_no)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [rows[0].id, pj.row_count, pj.target_rows ?? section?.lastRow ?? null, pj.notes, section?.id ?? null, pj.repeat ?? 1],
       );
-      // Los primeros pasos del patrón, marcados como hechos.
-      if (pj.stepsDone) {
-        await client.query(
-          `INSERT INTO project_step_progress (project_id, step_id)
-           SELECT $1, id FROM pattern_steps WHERE pattern_id = $2 AND position <= $3`,
-          [rows[0].id, patternIds[pj.pattern], pj.stepsDone],
-        );
+      for (const done of pj.sectionsDone ?? []) {
+        await client.query('INSERT INTO project_sections_done (project_id, section_id) VALUES ($1, $2)', [
+          rows[0].id,
+          sections[`${pj.pattern}/${done}`].id,
+        ]);
       }
     }
 

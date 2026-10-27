@@ -15,6 +15,8 @@ const props = defineProps({
   /** Foto 4:3 del proyecto. Sin foto se ve la trama de puntos. */
   image: { type: String, default: '' },
   saved: { type: Boolean, default: false },
+  /** false oculta el corazón de guardar (p. ej. mientras no existan los favoritos). */
+  saveable: { type: Boolean, default: true },
 })
 const emit = defineEmits(['update:saved'])
 const LEVELS = { principiante: ['oliva', 'Principiante'], intermedio: ['amarillo', 'Intermedio'], avanzado: ['rosa', 'Avanzado'] }
@@ -28,7 +30,7 @@ const priceText = computed(() => (typeof props.price === 'number' ? props.price.
 <template>
   <article class="bc-card bc-pattern">
     <div :class="['bc-pattern__media', { 'is-placeholder': !image }]" :style="image ? { backgroundImage: `url(${image})` } : null">
-      <button type="button" :class="['bc-save', { 'is-on': isSaved }]" :aria-pressed="isSaved"
+      <button v-if="saveable" type="button" :class="['bc-save', { 'is-on': isSaved }]" :aria-pressed="isSaved"
         :aria-label="isSaved ? 'Quitar de guardados' : 'Guardar'" @click="toggleSave">
         <BIcon name="heart" :size="20" :filled="isSaved" />
       </button>

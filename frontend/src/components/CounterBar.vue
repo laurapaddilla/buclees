@@ -7,6 +7,8 @@ import { BIcon } from '@/design-system/components/index.js';
 const props = defineProps({
   value: { type: Number, required: true },
   target: { type: Number, default: null },
+  /** Parte del patrón en curso, p. ej. «Orejas 2/2». */
+  context: { type: String, default: '' },
 });
 defineEmits(['increment', 'decrement', 'reset']);
 
@@ -32,7 +34,7 @@ const pct = computed(() => (props.target ? Math.min(100, Math.round((props.value
       </button>
       <div class="counter-bar__value" aria-live="polite">
         <span class="h1 counter-bar__num">{{ value }}</span>
-        <span class="caption counter-bar__of">{{ target ? (done ? '¡Objetivo!' : `de ${target}`) : 'vueltas' }}</span>
+        <span class="caption counter-bar__of">{{ context ? `${context} · ` : '' }}{{ target ? (done ? '¡Objetivo!' : `de ${target}`) : 'vueltas' }}</span>
       </div>
       <button type="button" class="counter-bar__btn counter-bar__btn--plus" aria-label="Sumar una vuelta" @click="$emit('increment')">
         <BIcon name="plus" :size="28" />
@@ -140,7 +142,11 @@ const pct = computed(() => (props.target ? Math.min(100, Math.round((props.value
 }
 
 .counter-bar__of {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .counter-bar.is-done .counter-bar__of {

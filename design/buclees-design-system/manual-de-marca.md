@@ -36,9 +36,11 @@ Usa siempre estas abreviaturas (en `TutorialStep` y en los patrones) y enlaza la
 | pb | punto bajo |
 | pma | punto medio alto |
 | pa | punto alto |
+| pad | punto alto doble (en otros patrones, «pvd» o «punto vareta doble») |
 | aum | aumento (2 puntos en el mismo) |
 | dism | disminución (2 puntos juntos) |
 | am | anillo mágico |
+| ht | solo por la hebra trasera del punto (en otros patrones, «BLO») |
 
 Grosores de lana en su nombre internacional: Lace, Fingering, Sport, DK, Worsted, Bulky.
 
