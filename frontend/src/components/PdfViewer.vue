@@ -17,8 +17,10 @@ const pagesEl = ref(null);
 const loading = ref(true);
 const error = ref('');
 const pageCount = ref(0);
+let loadingTask = null; // la tarea de carga de pdf.js: es la que se destruye al salir
 let pdfDoc = null;
 let bytes = null;
+let unmounted = false;
 let renderedWidth = 0;
 let resizeObserver = null;
 let resizeTimer = null;
@@ -35,6 +37,8 @@ async function renderPages() {
   const ratio = window.devicePixelRatio || 1;
 
   for (let n = 1; n <= pdfDoc.numPages; n++) {
+    // Si has salido de la página mientras se dibujaba, se deja de dibujar.
+    if (unmounted) return;
     const page = await pdfDoc.getPage(n);
     const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
     const canvas = document.createElement('canvas');
@@ -59,7 +63,8 @@ onMounted(async () => {
   try {
     bytes = await getPdfBytes(props.projectId);
     // pdf.js se queda con el buffer que recibe: se le pasa una copia para poder reabrir el PDF.
-    pdfDoc = await getDocument({ data: bytes.slice() }).promise;
+    loadingTask = getDocument({ data: bytes.slice() });
+    pdfDoc = await loadingTask.promise;
     pageCount.value = pdfDoc.numPages;
     loading.value = false;
     await renderPages();
@@ -75,10 +80,17 @@ onMounted(async () => {
   }
 });
 
+// Al salir se libera el PDF y su worker. En pdf.js 6, destroy() es de la tarea de carga, no del documento.
+// Va en try/catch: un error aquí interrumpiría a Vue al quitar la vista y la navegación se quedaría a medias.
 onBeforeUnmount(() => {
+  unmounted = true;
   resizeObserver?.disconnect();
   clearTimeout(resizeTimer);
-  pdfDoc?.destroy();
+  try {
+    loadingTask?.destroy().catch(() => {});
+  } catch {
+    // Si no se puede liberar, el navegador lo hará al cerrar la pestaña.
+  }
 });
 </script>
 
