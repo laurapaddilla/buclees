@@ -83,6 +83,7 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 - Nunca devolver el hash de la contraseña en una respuesta.
 
 ## Frontend
+- **Acceso (decisión de la autora, 27/10/2026):** sin cuenta se ven la tienda, los patrones y los tutoriales, y se puede llenar el carrito (guardado en localStorage). Hace falta cuenta para empezar un patrón, para todo el Taller y para **pagar**: el checkout pide entrar o registrarse y vuelve al pago con el carrito intacto.
 - Rutas: inicio/tienda, detalle de producto, patrones (listado y detalle), carrito, login/registro, checkout, historial de pedidos, mis proyectos, crear/editar proyecto, vista de trabajo del proyecto, perfil, 404 y panel admin simple.
 - Pinia para usuario y carrito (carrito persistido en localStorage). Guards de Vue Router en rutas privadas.
 - Contador con **actualización optimista**: actualizar la pantalla al instante, enviar la petición en segundo plano y revertir si falla.
