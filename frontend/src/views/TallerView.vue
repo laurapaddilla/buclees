@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth.js';
 import { listProjects } from '@/services/projects.js';
 import ProjectCard from '@/components/ProjectCard.vue';
+import { BIcon } from '@/design-system/components/index.js';
 
 const auth = useAuthStore();
 const projects = ref([]);
@@ -37,6 +38,16 @@ onMounted(load);
       <RouterLink to="/taller/nuevo" class="bc-btn bc-btn--primary bc-btn--md link-btn">Nuevo proyecto</RouterLink>
     </div>
 
+    <!-- Contador rápido: sin proyecto, para contar algo puntual -->
+    <RouterLink to="/taller/contador-rapido" class="quick-link">
+      <span class="quick-link__icon" aria-hidden="true"><BIcon name="tally" :size="22" /></span>
+      <span class="quick-link__text">
+        <span class="bc-card__title quick-link__title">Contador rápido</span>
+        <span class="body-sm quick-link__sub">Cuenta sin crear un proyecto</span>
+      </span>
+      <span class="quick-link__go" aria-hidden="true">→</span>
+    </RouterLink>
+
     <div v-if="loading" class="notice" aria-live="polite"><p>Cargando tus proyectos…</p></div>
 
     <div v-else-if="error" class="notice" role="alert">
@@ -68,6 +79,57 @@ onMounted(load);
 </template>
 
 <style scoped>
+.quick-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  margin-bottom: var(--space-8);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--amarillo-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.quick-link:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.quick-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.quick-link__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--amarillo-text);
+}
+
+.quick-link__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.quick-link__title {
+  margin: 0;
+}
+
+.quick-link__sub {
+  color: var(--amarillo-text);
+}
+
+.quick-link__go {
+  font-weight: 800;
+}
+
 .taller__group + .taller__group {
   margin-top: var(--space-12);
 }

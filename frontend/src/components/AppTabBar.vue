@@ -1,12 +1,15 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { BIcon } from '@/design-system/components/index.js';
+import QuickMenu from '@/components/QuickMenu.vue';
 
-// Barra de pestañas del móvil, como en una app: Inicio · Tienda · + · Taller · Perfil.
-// El + crea un proyecto nuevo. Solo se ve por debajo de 768 px (en escritorio está la cabecera).
+// Barra de pestañas del móvil, como en una app: Inicio · Tienda · (menú rápido) · Taller · Perfil.
+// El botón central (un ovillo) abre el menú rápido: seguir con el último proyecto, nuevo proyecto o contador rápido.
+// Solo se ve por debajo de 768 px (en escritorio está la cabecera).
 const route = useRoute();
 const path = computed(() => route.path);
+const quickMenu = ref(null);
 
 const tabs = computed(() => [
   { to: '/', label: 'Inicio', icon: 'home', current: path.value === '/' },
@@ -34,9 +37,9 @@ const tabs = computed(() => [
       <span class="caption">{{ tab.label }}</span>
     </RouterLink>
 
-    <RouterLink to="/taller/nuevo" class="tabbar__new" aria-label="Nuevo proyecto">
-      <BIcon name="plus" :size="28" />
-    </RouterLink>
+    <button type="button" class="tabbar__new" aria-label="Acciones rápidas" aria-haspopup="dialog" @click="quickMenu.open()">
+      <BIcon name="yarn" :size="30" />
+    </button>
 
     <RouterLink
       v-for="tab in tabs.slice(2)"
@@ -49,6 +52,7 @@ const tabs = computed(() => [
       <span class="caption">{{ tab.label }}</span>
     </RouterLink>
   </nav>
+  <QuickMenu ref="quickMenu" />
 </template>
 
 <style scoped>
@@ -101,7 +105,7 @@ const tabs = computed(() => [
   outline-offset: 2px;
 }
 
-/* El + del centro: grande y en rosa, como el + del contador. */
+/* Botón central: grande y en rosa, como el + del contador. */
 .tabbar__new {
   justify-self: center;
   display: grid;
@@ -109,8 +113,10 @@ const tabs = computed(() => [
   width: 56px;
   height: 56px;
   border-radius: var(--radius-pill);
+  border: 0;
   background: var(--rosa);
   color: var(--on-rosa);
   box-shadow: var(--shadow-card);
+  cursor: pointer;
 }
 </style>

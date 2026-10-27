@@ -14,6 +14,7 @@ import {
 } from '@/services/projects.js';
 import { listPatterns } from '@/services/patterns.js';
 import { DIFFICULTY } from '@/utils/labels.js';
+import { clearLastProject } from '@/utils/lastProject.js';
 
 // Una sola vista para crear (/taller/nuevo) y editar (/taller/:id/editar).
 const route = useRoute();
@@ -167,6 +168,7 @@ async function remove() {
   if (!window.confirm(`¿Borrar «${form.name}»? Se perderán su contador, sus notas y su PDF.`)) return;
   try {
     await deleteProject(projectId.value);
+    clearLastProject(projectId.value);
     router.replace('/taller');
   } catch (err) {
     formError.value = err.message;

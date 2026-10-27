@@ -14,6 +14,8 @@ const routes = [
   { path: '/tutoriales', name: 'tutorials', component: () => import('@/views/TutorialsView.vue') },
   { path: '/tutoriales/:slug', name: 'tutorial', component: () => import('@/views/TutorialView.vue') },
   { path: '/taller', name: 'taller', component: () => import('@/views/TallerView.vue'), meta: { requiresAuth: true } },
+  // Contador rápido: sin proyecto y sin cuenta (solo se guarda en el dispositivo).
+  { path: '/taller/contador-rapido', name: 'quick-counter', component: () => import('@/views/QuickCounterView.vue') },
   // "nuevo" va antes que ":id" para que no se interprete como un id.
   { path: '/taller/nuevo', name: 'project-new', component: () => import('@/views/ProjectFormView.vue'), meta: { requiresAuth: true } },
   { path: '/taller/:id(\\d+)', name: 'project-work', component: () => import('@/views/ProjectWorkView.vue'), meta: { requiresAuth: true } },

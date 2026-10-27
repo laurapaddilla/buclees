@@ -187,19 +187,3 @@ textarea.field-control {
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
-
-/* ---------- Fondo con hilo ---------- */
-/* El hilo de bucles de la «ee» del logo, muy suave, repetido detrás de toda la página.
-   Se pinta como máscara para poder usar un color del sistema de diseño (--line): así también
-   se adapta al modo oscuro del contador. Para usar otra ilustración, basta con cambiar el SVG. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--line);
-  -webkit-mask: url('@/assets/textures/hilo.svg') repeat 0 0 / 240px 240px;
-  mask: url('@/assets/textures/hilo.svg') repeat 0 0 / 240px 240px;
-  opacity: 0.5;
-}

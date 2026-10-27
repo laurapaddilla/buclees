@@ -18,6 +18,7 @@ import CounterBar from '@/components/CounterBar.vue';
 import ResetDialog from '@/components/ResetDialog.vue';
 import CounterHelp from '@/components/CounterHelp.vue';
 import { useWorkTheme } from '@/composables/useWorkTheme.js';
+import { setLastProject } from '@/utils/lastProject.js';
 import PatternGuide from '@/components/PatternGuide.vue';
 import PdfViewer from '@/components/PdfViewer.vue';
 
@@ -200,6 +201,7 @@ onMounted(async () => {
   window.addEventListener('pagehide', flushNotes);
   try {
     showProject(await getProject(id));
+    setLastProject(project.value); // para "Seguir con…" del menú rápido
     notes.value = project.value.counter.notes;
     // Se activa el guardado de notas después de cargar el texto inicial.
     setTimeout(() => (notesLoaded = true));
