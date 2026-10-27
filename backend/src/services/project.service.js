@@ -13,11 +13,13 @@ const SELECT_PROJECT = `
               ELSE json_build_object('id', pa.id, 'title', pa.title, 'difficulty', pa.difficulty, 'is_demo', pa.is_demo)
          END AS pattern,
          json_build_object('row_count', c.row_count, 'target_rows', c.target_rows, 'notes', c.notes,
-                           'section_id', c.section_id, 'repeat_no', c.repeat_no) AS counter,
+                           'section_id', c.section_id, 'repeat_no', c.repeat_no,
+                           'section_title', cs.title, 'repeat_count', cs.repeat_count) AS counter,
          CASE WHEN p.pdf_file IS NULL THEN NULL ELSE json_build_object('name', p.pdf_name) END AS pdf
   FROM projects p
   JOIN project_counters_notes c ON c.project_id = p.id
   LEFT JOIN patterns pa ON pa.id = p.pattern_id
+  LEFT JOIN pattern_sections cs ON cs.id = c.section_id
 `;
 
 const COUNTER_RETURNING = 'RETURNING c.row_count, c.target_rows, c.notes, c.section_id, c.repeat_no';

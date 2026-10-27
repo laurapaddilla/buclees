@@ -1,490 +1,312 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth.js';
-import { BPatternCard, BRowCounter } from '@/design-system/components/index.js';
-import BrandArt from '@/components/BrandArt.vue';
-import { listPatterns } from '@/services/patterns.js';
-import { listTutorials } from '@/services/tutorials.js';
-import { useMediaQuery } from '@/composables/useMediaQuery.js';
+import YarnBalls from '@/components/YarnBalls.vue';
+import { listProjects } from '@/services/projects.js';
 
+// Inicio: la pantalla principal de la app, no una portada de presentación.
+// Con sesión, tus proyectos en curso para seguir tejiendo; sin sesión, la invitación a unirte.
 const auth = useAuthStore();
-const router = useRouter();
+const firstName = computed(() => auth.user?.name?.split(' ')[0] ?? '');
 
-// Un solo .display por página (manual de marca). En el móvil el título usa .h1, que cabe mejor.
-const wide = useMediaQuery('(min-width: 768px)');
-const titleClass = computed(() => (wide.value ? 'display' : 'h1'));
+const projects = ref([]);
+const loading = ref(false);
+const error = ref('');
 
-// Contador de prueba: funciona de verdad, pero no guarda nada (no hace falta cuenta).
-const demoCount = ref(3);
-
-// Patrones destacados (los de Buclees primero; la demo va al final) y puntos para aprender.
-const patterns = ref([]);
-const tutorials = ref([]);
-onMounted(async () => {
-  const [p, t] = await Promise.allSettled([listPatterns(), listTutorials()]);
-  if (p.status === 'fulfilled') patterns.value = p.value.slice(0, 3);
-  if (t.status === 'fulfilled') tutorials.value = t.value;
-});
-
-const workshopLink = computed(() => (auth.isAuthenticated ? '/taller' : '/registro'));
-
-// BPatternCard usa un <a href> normal; se intercepta para navegar sin recargar la página.
-function followCardLink(event) {
-  const link = event.target.closest('a[href^="/"]');
-  if (!link || event.ctrlKey || event.metaKey || event.shiftKey) return;
-  event.preventDefault();
-  router.push(link.getAttribute('href'));
-}
-</script>
-
-<template>
-  <div class="home">
-    <!-- 1. Portada -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero__inner">
-        <div class="hero__text">
-          <p class="label hero__eyebrow">TIENDA Y TALLER DE CROCHET</p>
-          <h1 id="hero-title" :class="[titleClass, 'hero__title']">El arte de tejer tu propio mundo</h1>
-          <p class="body hero__lead">
-            Patrones gratuitos paso a paso, tutoriales de los puntos básicos y un contador de vueltas que sigue el patrón
-            contigo. Todo en tu móvil, con el ganchillo en la mano.
-          </p>
-          <div class="hero__actions">
-            <RouterLink :to="workshopLink" class="bc-btn bc-btn--primary bc-btn--md link-btn">
-              {{ auth.isAuthenticated ? 'Ir a mi taller' : 'Empieza gratis' }}
-            </RouterLink>
-            <RouterLink to="/patrones" class="bc-btn bc-btn--secondary bc-btn--md link-btn">Ver patrones</RouterLink>
-          </div>
-        </div>
-        <div class="hero__art">
-          <BrandArt />
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. El contador, para probarlo sin cuenta -->
-    <section class="band band--kraft" aria-labelledby="try-title">
-      <div class="band__inner try">
-        <div class="try__text">
-          <p class="label try__eyebrow">LA ESTRELLA DEL TALLER</p>
-          <h2 id="try-title" class="h1">Cuenta sin soltar el ganchillo</h2>
-          <p class="body">
-            Toca el + al terminar cada vuelta. En tu taller, cada toque se guarda al momento y el patrón te enseña por qué
-            vuelta vas. Pruébalo aquí: no hace falta cuenta.
-          </p>
-          <ul class="body-sm try__list">
-            <li>Botones grandes, pensados para el móvil.</li>
-            <li>La pantalla no se apaga mientras cuentas.</li>
-            <li>Notas que se guardan solas.</li>
-          </ul>
-        </div>
-        <div class="try__counter">
-          <BRowCounter v-model="demoCount" :target="12" label="Vuelta" title="Prueba el contador" />
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Lo que hay en Buclees -->
-    <section class="band" aria-labelledby="pillars-title">
-      <div class="band__inner">
-        <h2 id="pillars-title" class="h2 band__title">Todo lo que necesitas para tejer</h2>
-        <ul class="pillars">
-          <li class="pillar">
-            <span class="pillar__shape pillar__shape--rosa" aria-hidden="true" />
-            <h3 class="bc-card__title">Taller</h3>
-            <p class="body-sm">Tus proyectos con su contador, sus notas y su patrón, de Buclees o tu propio PDF.</p>
-            <RouterLink :to="workshopLink" class="pillar__link">{{ auth.isAuthenticated ? 'Abrir mi taller' : 'Crear mi cuenta' }}</RouterLink>
-          </li>
-          <li class="pillar">
-            <span class="pillar__shape pillar__shape--oliva" aria-hidden="true" />
-            <h3 class="bc-card__title">Patrones gratis</h3>
-            <p class="body-sm">Paso a paso y por partes, con la dificultad, el ganchillo y la lana de cada uno.</p>
-            <RouterLink to="/patrones" class="pillar__link">Ver patrones</RouterLink>
-          </li>
-          <li class="pillar">
-            <span class="pillar__shape pillar__shape--amarillo" aria-hidden="true" />
-            <h3 class="bc-card__title">Tutoriales</h3>
-            <p class="body-sm">Los puntos básicos explicados poco a poco, para quien empieza desde cero.</p>
-            <RouterLink to="/tutoriales" class="pillar__link">Aprender los puntos</RouterLink>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- 4. Patrones destacados -->
-    <section v-if="patterns.length" class="band band--sunken" aria-labelledby="featured-title">
-      <div class="band__inner">
-        <div class="band__head">
-          <h2 id="featured-title" class="h2">Patrones para empezar hoy</h2>
-          <RouterLink to="/patrones" class="body-sm band__more">Ver todos</RouterLink>
-        </div>
-        <ul class="featured" @click="followCardLink">
-          <li v-for="p in patterns" :key="p.id">
-            <BPatternCard
-              :title="p.title"
-              :href="`/patrones/${p.id}`"
-              :designer="p.designer ?? ''"
-              :difficulty="p.difficulty"
-              :hook="p.hook_size ?? ''"
-              :yarn="p.yarn_weight ?? ''"
-              :image="p.image_url ?? ''"
-              :price="0"
-              :saveable="false"
-            />
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Puntos básicos -->
-    <section v-if="tutorials.length" class="band" aria-labelledby="stitches-title">
-      <div class="band__inner stitches">
-        <div>
-          <h2 id="stitches-title" class="h2">Aprende los puntos básicos</h2>
-          <p class="body">Cada patrón de Buclees usa estas abreviaturas. Toca una para ver cómo se hace.</p>
-        </div>
-        <ul class="stitches__list">
-          <li v-for="t in tutorials" :key="t.slug">
-            <RouterLink :to="`/tutoriales/${t.slug}`" class="stitches__chip" :aria-label="t.name">
-              <span class="stitches__abbr">{{ t.abbreviation }}</span>
-              <span class="body-sm stitches__name">{{ t.name }}</span>
-            </RouterLink>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Tienda, a punto de abrir -->
-    <section class="band" aria-labelledby="shop-title">
-      <div class="band__inner">
-        <div class="shop">
-          <p class="label shop__eyebrow">MUY PRONTO</p>
-          <h2 id="shop-title" class="h2">La tienda abre pronto</h2>
-          <p class="body">Lanas en todos los colores, kits con su patrón y accesorios para tejer. Envío gratis desde 40 €.</p>
-        </div>
-      </div>
-    </section>
-  </div>
-</template>
-
-<style scoped>
-/* ---------- Bandas a todo el ancho con contenido centrado ---------- */
-.band {
-  padding: var(--space-12) 0;
-}
-
-.band__inner,
-.hero__inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 var(--space-4);
-}
-
-@media (min-width: 768px) {
-  .band__inner,
-  .hero__inner {
-    padding: 0 var(--space-6);
+async function load() {
+  if (!auth.isAuthenticated) return;
+  loading.value = true;
+  error.value = '';
+  try {
+    projects.value = (await listProjects()).filter((p) => p.status === 'en_curso');
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    loading.value = false;
   }
 }
 
-/* Kraft: el papel de la etiqueta (manual de marca). */
-.band--kraft {
-  background: color-mix(in srgb, var(--kraft) 35%, var(--surface-100));
+onMounted(load);
+watch(() => auth.isAuthenticated, load);
+
+// «Orejas 2/2 · vuelta 9 de 22», «Vuelta 12» o «Vuelta 37 de 80»
+function progressText(p) {
+  const c = p.counter;
+  const row = c.target_rows ? `vuelta ${c.row_count} de ${c.target_rows}` : `vuelta ${c.row_count}`;
+  if (!c.section_title) return row.charAt(0).toUpperCase() + row.slice(1);
+  const part = c.repeat_count > 1 ? `${c.section_title} ${c.repeat_no}/${c.repeat_count}` : c.section_title;
+  return `${part} · ${row}`;
 }
 
-.band--sunken {
-  background: var(--surface-200);
+const pct = (p) => (p.counter.target_rows ? Math.min(100, Math.round((p.counter.row_count / p.counter.target_rows) * 100)) : 0);
+</script>
+
+<template>
+  <section class="page home">
+    <header class="home__head">
+      <div>
+        <h1 class="h1 home__title">{{ auth.isAuthenticated ? `Hola, ${firstName}` : 'El arte de tejer tu propio mundo' }}</h1>
+        <p v-if="auth.isAuthenticated" class="body home__sub">¿Seguimos tejiendo?</p>
+      </div>
+      <div class="home__art"><YarnBalls /></div>
+    </header>
+
+    <!-- Con sesión: proyectos en curso -->
+    <section v-if="auth.isAuthenticated" class="home__section" aria-labelledby="sigue">
+      <div class="home__section-head">
+        <h2 id="sigue" class="h2">Sigue tejiendo</h2>
+        <RouterLink v-if="projects.length" to="/taller" class="body-sm home__more">Ver todo el taller</RouterLink>
+      </div>
+
+      <p v-if="loading" class="notice" aria-live="polite">Cargando tus proyectos…</p>
+      <div v-else-if="error" class="notice" role="alert">
+        <p>{{ error }}</p>
+        <p><button type="button" class="bc-btn bc-btn--secondary bc-btn--md" @click="load">Reintentar</button></p>
+      </div>
+      <div v-else-if="projects.length === 0" class="notice">
+        <p class="h3">Aún no tienes proyectos en curso</p>
+        <p>Elige un patrón o crea tu propio proyecto y empieza a contar vueltas.</p>
+        <p class="home__actions">
+          <RouterLink to="/taller/nuevo" class="bc-btn bc-btn--primary bc-btn--md link-btn">Nuevo proyecto</RouterLink>
+          <RouterLink to="/patrones" class="bc-btn bc-btn--secondary bc-btn--md link-btn">Ver patrones</RouterLink>
+        </p>
+      </div>
+
+      <ul v-else class="continue">
+        <li v-for="p in projects" :key="p.id">
+          <RouterLink :to="`/taller/${p.id}`" class="continue__item">
+            <span class="continue__count h2" aria-hidden="true">{{ p.counter.row_count }}</span>
+            <span class="continue__body">
+              <span class="bc-card__title continue__name">{{ p.name }}</span>
+              <span class="body-sm continue__meta">{{ progressText(p) }}</span>
+              <span v-if="p.counter.target_rows" class="continue__bar" aria-hidden="true"><span :style="{ width: pct(p) + '%' }" /></span>
+            </span>
+          </RouterLink>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Sin sesión: invitación a unirse -->
+    <section v-else class="home__section" aria-labelledby="unete">
+      <div class="notice home__join">
+        <p id="unete" class="h3">Aún no te has unido a nuestra comunidad</p>
+        <p>Crea tu cuenta gratis para guardar tus proyectos y contar tus vueltas desde el móvil.</p>
+        <p class="home__actions">
+          <RouterLink to="/registro" class="bc-btn bc-btn--primary bc-btn--md link-btn">Unirme</RouterLink>
+          <RouterLink to="/entrar" class="bc-btn bc-btn--secondary bc-btn--md link-btn">Ya tengo cuenta</RouterLink>
+        </p>
+      </div>
+    </section>
+
+    <!-- Accesos directos (en el móvil, Patrones y Tutoriales no tienen pestaña propia) -->
+    <nav class="shortcuts" aria-label="Accesos directos">
+      <RouterLink to="/patrones" class="shortcut">
+        <span class="shortcut__dot shortcut__dot--oliva" aria-hidden="true" />
+        <span class="bc-card__title">Patrones</span>
+      </RouterLink>
+      <RouterLink to="/tutoriales" class="shortcut">
+        <span class="shortcut__dot shortcut__dot--amarillo" aria-hidden="true" />
+        <span class="bc-card__title">Tutoriales</span>
+      </RouterLink>
+    </nav>
+  </section>
+</template>
+
+<style scoped>
+/* Móvil: ovillos arriba y título debajo, a todo el ancho. Desde 560 px, lado a lado. */
+.home__head {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
-.band__title {
-  margin-bottom: var(--space-6);
+.home__art {
+  order: -1;
+  width: 100%;
+  max-width: 240px;
 }
 
-.band__head {
+@media (min-width: 560px) {
+  .home__head {
+    grid-template-columns: 1fr minmax(160px, 220px);
+    align-items: center;
+  }
+  .home__art {
+    order: 0;
+  }
+}
+
+.home__head > * {
+  min-width: 0;
+}
+
+.home__title {
+  color: var(--oliva-strong);
+}
+
+.home__sub {
+  margin: var(--space-1) 0 0;
+  color: var(--ink-muted);
+}
+
+.home__section {
+  margin-bottom: var(--space-8);
+}
+
+.home__section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
-.band__more {
+.home__more {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   font-weight: 700;
 }
 
-/* ---------- Portada ---------- */
-.hero {
-  padding: var(--space-8) 0 var(--space-12);
-  overflow: hidden;
-}
-
-.hero__inner {
-  display: grid;
-  gap: var(--space-8);
-  align-items: center;
-}
-
-@media (min-width: 900px) {
-  .hero {
-    padding: var(--space-12) 0;
-  }
-  .hero__inner {
-    grid-template-columns: 1.1fr 1fr;
-  }
-}
-
-.hero__inner > * {
-  min-width: 0;
-}
-
-.hero__eyebrow {
-  margin: 0 0 var(--space-3);
-  color: var(--oliva-strong);
-}
-
-.hero__title {
-  max-width: 13ch;
-  color: var(--oliva);
-}
-
-/* En .h1 (móvil) el oliva de marca no llega al contraste de texto: se usa oliva-strong. */
-.hero__title.h1 {
-  color: var(--oliva-strong);
-}
-
-.hero__lead {
-  max-width: 48ch;
-  margin: var(--space-4) 0 var(--space-6);
-}
-
-.hero__actions {
+.home__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-3);
 }
 
-.hero__art {
-  max-width: 520px;
-  justify-self: center;
-  width: 100%;
-}
-
-/* ---------- Contador de prueba ---------- */
-.try {
+/* ---------- Sigue tejiendo ---------- */
+.continue {
   display: grid;
-  gap: var(--space-8);
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .try {
-    grid-template-columns: 1fr minmax(300px, 380px);
-  }
-}
-
-.try > * {
-  min-width: 0;
-}
-
-.try__eyebrow {
-  margin: 0 0 var(--space-2);
-  color: var(--rosa-strong);
-}
-
-.try__text p {
-  max-width: 52ch;
-  margin: var(--space-3) 0 0;
-}
-
-.try__list {
-  margin: var(--space-4) 0 0;
-  padding-left: var(--space-6);
-  color: var(--ink-muted);
-}
-
-.try__counter :deep(.bc-counter) {
-  max-width: none;
-}
-
-/* ---------- Pilares ---------- */
-.pillars {
-  display: grid;
-  gap: var(--space-6);
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 @media (min-width: 768px) {
-  .pillars {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.pillar {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-6);
-  background: var(--surface-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
-.pillar h3 {
-  margin: 0;
-}
-
-.pillar p {
-  margin: 0;
-  color: var(--ink-muted);
-}
-
-/* Un disco de color, como un ovillo, en lugar de un icono. */
-.pillar__shape {
-  width: 40px;
-  height: 40px;
-  margin-bottom: var(--space-2);
-  border-radius: var(--radius-pill);
-}
-
-.pillar__shape--rosa {
-  background: var(--rosa);
-}
-
-.pillar__shape--oliva {
-  background: var(--oliva);
-}
-
-.pillar__shape--amarillo {
-  background: var(--amarillo);
-}
-
-.pillar__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  margin-top: auto;
-  font-weight: 700;
-}
-
-/* ---------- Patrones destacados ---------- */
-.featured {
-  display: grid;
-  gap: var(--space-6);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-@media (min-width: 640px) {
-  .featured {
+  .continue {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
-  .featured {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.continue__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 72px;
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--ink);
+  text-decoration: none;
+  transition: box-shadow 0.2s;
 }
 
-.featured :deep(.bc-card) {
-  position: relative;
-  max-width: none;
-  height: 100%;
+.continue__item:hover,
+.continue__item:focus-visible {
+  box-shadow: var(--shadow-card);
 }
 
-.featured :deep(.bc-card__title a::after) {
-  content: '';
-  position: absolute;
-  inset: 0;
+.continue__item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
-/* ---------- Puntos ---------- */
-.stitches {
+/* La vuelta actual en un disco rosa, como el + del contador. */
+.continue__count {
+  flex: none;
   display: grid;
-  gap: var(--space-6);
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--rosa-soft);
+  color: var(--rosa-text);
+  font-variant-numeric: tabular-nums;
 }
 
-@media (min-width: 900px) {
-  .stitches {
-    grid-template-columns: 1fr 1.4fr;
-    align-items: center;
-  }
+.continue__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
 }
 
-.stitches p {
-  margin: var(--space-2) 0 0;
+.continue__name {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.continue__meta {
   color: var(--ink-muted);
 }
 
-.stitches__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.continue__bar {
+  display: block;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-200);
+  overflow: hidden;
 }
 
-.stitches__chip {
-  display: inline-flex;
+.continue__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--rosa);
+}
+
+/* ---------- Accesos directos ---------- */
+.shortcuts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.shortcut {
+  display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: 0 var(--space-4) 0 var(--space-1);
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius-pill);
-  background: var(--surface-raised);
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-200);
+  border-radius: var(--radius-lg);
   color: var(--ink);
   text-decoration: none;
 }
 
-.stitches__chip:hover {
-  background: var(--surface-200);
+.shortcut:hover {
+  background: color-mix(in srgb, var(--kraft) 30%, var(--surface-200));
 }
 
-.stitches__abbr {
-  display: grid;
-  place-items: center;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 var(--space-2);
+.shortcut:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.shortcut .bc-card__title {
+  margin: 0;
+}
+
+/* Un ovillito de color en lugar de un icono. */
+.shortcut__dot {
+  flex: none;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-pill);
-  background: var(--rosa-soft);
-  color: var(--rosa-text);
-  font-weight: 700;
 }
 
-.stitches__name {
-  font-weight: 700;
+.shortcut__dot--oliva {
+  background: var(--oliva);
 }
 
-/* ---------- Tienda ---------- */
-.shop {
-  padding: var(--space-8) var(--space-6);
-  border-radius: var(--radius-lg);
-  background: var(--amarillo-soft);
-  color: var(--amarillo-text);
-}
-
-.shop h2 {
-  color: var(--ink);
-}
-
-.shop p {
-  max-width: 52ch;
-  margin: var(--space-2) 0 0;
-}
-
-.shop__eyebrow {
-  margin: 0 0 var(--space-2);
+.shortcut__dot--amarillo {
+  background: var(--amarillo);
 }
 </style>

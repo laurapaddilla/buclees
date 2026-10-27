@@ -16,6 +16,7 @@ import { useWakeLock } from '@/composables/useWakeLock.js';
 import { DIFFICULTY, STATUS_LABELS } from '@/utils/labels.js';
 import CounterBar from '@/components/CounterBar.vue';
 import ResetDialog from '@/components/ResetDialog.vue';
+import CounterHelp from '@/components/CounterHelp.vue';
 import PatternGuide from '@/components/PatternGuide.vue';
 import PdfViewer from '@/components/PdfViewer.vue';
 
@@ -231,7 +232,10 @@ onBeforeUnmount(() => {
             {{ DIFFICULTY[project.pattern.difficulty].label }}
           </BBadge>
         </div>
-        <h1 class="h2 work__title">{{ project.name }}</h1>
+        <div class="work__title-row">
+          <h1 class="h2 work__title">{{ project.name }}</h1>
+          <CounterHelp :with-parts="sections.length > 0" />
+        </div>
         <p v-if="project.pattern || project.material" class="body-sm work__meta">
           <span v-if="project.pattern">Patrón: {{ project.pattern.title }}</span>
           <span v-if="project.pattern && project.material"> · </span>
@@ -324,6 +328,12 @@ onBeforeUnmount(() => {
   margin-bottom: var(--space-2);
   font-weight: 700;
   text-decoration: none;
+}
+
+.work__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .work__head {

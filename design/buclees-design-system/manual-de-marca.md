@@ -84,7 +84,7 @@ Reglas: un solo `display` por página; Fredoka nunca para texto corrido; las ins
 
 ## Iconografía
 
-- Iconos de trazo, 24px de rejilla, trazo de 1,75px con extremos y uniones redondeadas, dibujados en `currentColor`. El juego incluido en los componentes: `plus`, `minus`, `reset`, `heart`, `check`, `bag`, `hook` (ganchillo).
+- Iconos de trazo, 24px de rejilla, trazo de 1,75px con extremos y uniones redondeadas, dibujados en `currentColor`. El juego incluido en los componentes: `plus`, `minus`, `reset`, `heart`, `check`, `bag`, `hook` (ganchillo), `home`, `user` y `help` (interrogación). Solo `BIcon` en Vue tiene los tres últimos.
 - Para ampliar el juego, usa una librería de trazo redondeado que case (p. ej. Lucide a 1,75px) y añade los iconos a un grupo de assets. Nada de emojis como iconos.
 
 ## Logotipo

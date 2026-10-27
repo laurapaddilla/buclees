@@ -109,8 +109,15 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - **Panel de admin:** productos (con colores y stock) y pedidos (cambiar el estado). **Imágenes subidas desde el panel** (JPG, PNG, WebP o GIF, con tamaño máximo y texto alternativo obligatorio). El editor de patrones (partes y pasos) va al panel **más adelante**, cuando lo demás esté terminado.
 - **Perfil:** mis pedidos, mis datos y contraseña (pidiendo la actual) y borrar mi cuenta (con confirmación; los pedidos se conservan anónimos).
 - **Alcance cerrado (27/10/2026, a propuesta de Claude y con el acuerdo de la autora):** para que todo se pueda defender en el vídeo y quepa en la memoria, **se quedan fuera y pasan a "vías futuras"** el alijo de lanas, las estadísticas, la calculadora de lana y el editor de patrones en el panel. La calculadora de muestra queda como extra opcional, solo si sobra tiempo. Se mantienen las variantes de color (se revisará al construir la tienda).
-- **Landing hecha (27/10/2026):** `HomeView` con portada (lema en `.display` en escritorio y `.h1` en móvil mediante `useMediaQuery`), ilustración `BrandArt` en el lenguaje de la portada del sistema de diseño (formas planas e hilo de bucles de la «ee», solo tokens), contador de prueba sin cuenta, tres pilares, patrones destacados, puntos básicos y aviso de la tienda. Pie `AppFooter` (oculto en la vista del contador). `/tienda` es provisional. Pendiente de que la autora diga qué cambiar.
-- **Orden:** primero la **landing** (inicio), después la tienda, el carrito, el pago y los pedidos, el perfil y el panel de admin.
+- **Inicio como pantalla de app (27/10/2026, la autora descartó la landing de presentación):**
+  - Con sesión: "Hola, Nombre" y **Sigue tejiendo** (proyectos en curso, con la parte y la vuelta: "Orejas 2/2 · vuelta 9 de 22"; la lista de proyectos incluye ahora `section_title` y `repeat_count` en el contador). Sin sesión: "Aún no te has unido a nuestra comunidad" con Unirme y Ya tengo cuenta. Accesos directos a Patrones y Tutoriales. **Nada de textos que "vendan" la app.**
+  - Ilustración `YarnBalls`: tres ovillos en rosa, oliva y amarillo con las vueltas de hilo (sustituye a las formas con bucles, que no gustaron).
+  - **Móvil: barra de pestañas abajo, como una app** (`AppTabBar`): Inicio · Tienda · **+** (nuevo proyecto, en rosa) · Taller · Perfil. La cabecera móvil solo lleva el logo; el pie de página solo se muestra en escritorio. **En la vista del contador se ocultan la barra y el pie** (se vuelve con "← Taller").
+  - Escritorio: cabecera con Tienda, Patrones, Tutoriales, Taller y Perfil (o Entrar sin sesión).
+  - `/perfil` básico (nombre, email y Salir; sin sesión, invitación a unirse). Mis pedidos y los datos llegarán con la tienda.
+  - **Ayuda del contador:** un "?" pequeño junto al nombre del proyecto (`CounterHelp`) con 4 o 5 frases; la de las partes solo aparece si el proyecto sigue un patrón por partes.
+  - Iconos nuevos en `BIcon` (en las dos copias y en el manual): `home`, `user` y `help`, con trazo redondeado de 1,75.
+- **Orden:** primero el inicio, después la tienda, el carrito, el pago y los pedidos, el perfil y el panel de admin.
 - **Herramientas del Taller (ideas recogidas; solo la de muestra sigue en el alcance):**
   - **¿Cuánta lana necesito?**: metros del patrón entre metros del ovillo, con un botón para añadir los ovillos al carrito.
   - **Calculadora de muestra**: cuántas cadenetas montar y cuántas vueltas tejer a partir de la muestra.
