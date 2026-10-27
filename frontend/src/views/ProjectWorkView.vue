@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { BBadge, BRowCounter } from '@/design-system/components/index.js';
+import { BBadge, BIcon, BRowCounter } from '@/design-system/components/index.js';
 import {
   chooseSection,
   completeSection,
@@ -17,6 +17,7 @@ import { DIFFICULTY, STATUS_LABELS } from '@/utils/labels.js';
 import CounterBar from '@/components/CounterBar.vue';
 import ResetDialog from '@/components/ResetDialog.vue';
 import CounterHelp from '@/components/CounterHelp.vue';
+import { useWorkTheme } from '@/composables/useWorkTheme.js';
 import PatternGuide from '@/components/PatternGuide.vue';
 import PdfViewer from '@/components/PdfViewer.vue';
 
@@ -191,6 +192,9 @@ const onVisibilityChange = () => {
 // ---------- Pantalla siempre encendida ----------
 const wakeLock = useWakeLock();
 
+// ---------- Modo oscuro (solo aquí, con la luna) ----------
+const theme = useWorkTheme();
+
 onMounted(async () => {
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('pagehide', flushNotes);
@@ -235,6 +239,15 @@ onBeforeUnmount(() => {
         <div class="work__title-row">
           <h1 class="h2 work__title">{{ project.name }}</h1>
           <CounterHelp :with-parts="sections.length > 0" />
+          <button
+            type="button"
+            class="theme-btn"
+            :aria-pressed="theme.dark.value"
+            :aria-label="theme.dark.value ? 'Volver al modo claro' : 'Activar el modo oscuro'"
+            @click="theme.toggle"
+          >
+            <BIcon :name="theme.dark.value ? 'sun' : 'moon'" :size="22" />
+          </button>
         </div>
         <p v-if="project.pattern || project.material" class="body-sm work__meta">
           <span v-if="project.pattern">Patrón: {{ project.pattern.title }}</span>
@@ -334,6 +347,30 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+}
+
+/* Luna / sol: mismo aspecto que el "?" de la ayuda. */
+.theme-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.theme-btn:hover {
+  background: var(--surface-200);
+  color: var(--ink);
+}
+
+.theme-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .work__head {

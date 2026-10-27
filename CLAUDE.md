@@ -115,8 +115,10 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - **Móvil: barra de pestañas abajo, como una app** (`AppTabBar`): Inicio · Tienda · **+** (nuevo proyecto, en rosa) · Taller · Perfil. La cabecera móvil solo lleva el logo; el pie de página solo se muestra en escritorio. **En la vista del contador se ocultan la barra y el pie** (se vuelve con "← Taller").
   - Escritorio: cabecera con Tienda, Patrones, Tutoriales, Taller y Perfil (o Entrar sin sesión).
   - `/perfil` básico (nombre, email y Salir; sin sesión, invitación a unirse). Mis pedidos y los datos llegarán con la tienda.
+  - **Tema (decisión de la autora, 27/10/2026): siempre claro**, en móvil y escritorio y aunque el dispositivo esté en oscuro (`<html data-theme="light">` y `<meta name="color-scheme" content="light">`). El **oscuro solo dentro del contador**, con el botón de luna/sol (`useWorkTheme`): se recuerda en localStorage (`buclees_contador_oscuro`) y al salir del contador la página vuelve a claro.
+  - **Inicio sin sesión:** invitación con 3 ventajas breves y debajo contenido real (fila deslizante de patrones y los puntos básicos). **Con sesión:** Sigue tejiendo y dos tarjetas de acceso (Patrones con la trama de puntos del sistema de diseño, Tutoriales con chips de abreviaturas, y el número de cada uno).
   - **Ayuda del contador:** un "?" pequeño junto al nombre del proyecto (`CounterHelp`) con 4 o 5 frases; la de las partes solo aparece si el proyecto sigue un patrón por partes.
-  - Iconos nuevos en `BIcon` (en las dos copias y en el manual): `home`, `user` y `help`, con trazo redondeado de 1,75.
+  - Iconos nuevos en `BIcon` (en las dos copias y en el manual): `home`, `user`, `help`, `moon` y `sun`, con trazo redondeado de 1,75.
 - **Orden:** primero el inicio, después la tienda, el carrito, el pago y los pedidos, el perfil y el panel de admin.
 - **Herramientas del Taller (ideas recogidas; solo la de muestra sigue en el alcance):**
   - **¿Cuánta lana necesito?**: metros del patrón entre metros del ovillo, con un botón para añadir los ovillos al carrito.

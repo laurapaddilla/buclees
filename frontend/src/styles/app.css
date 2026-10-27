@@ -176,3 +176,14 @@ textarea.field-control {
   color: var(--danger);
   font-weight: 700;
 }
+
+/* ---------- Tema ---------- */
+/* Claro siempre; el oscuro solo dentro del contador, cuando se activa con la luna (useWorkTheme).
+   color-scheme hace que el navegador pinte los controles nativos (scroll, selects) en el tema correcto. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
