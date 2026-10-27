@@ -99,6 +99,26 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - Si un diseño y una decisión técnica chocan, avísame en vez de decidir por tu cuenta.
 - Los assets finales (logo, iconos, imágenes) se copian a `frontend/src/assets`; no se referencian desde `design/`.
 
+## Decisiones de la autora del 27/10/2026 (pendientes de construir)
+- **Tienda:**
+  - **Pago simulado**: formulario de tarjeta de prueba que no cobra; el pedido queda "pagado". Sin pasarela externa.
+  - **Envío de 3,95 €, gratis desde 40 €**. Lo calcula el servidor y el carrito avisa de lo que falta para el envío gratis.
+  - **Ovillos con variantes de color, cada una con su stock.** Al comprar se elige el color (tabla de variantes nueva).
+  - **Una sola foto por producto.**
+  - **Dirección de envío copiada en el pedido** (nombre, dirección, ciudad, código postal y teléfono), como el precio de cada línea.
+- **Panel de admin:** productos (con colores y stock) y pedidos (cambiar el estado). **Imágenes subidas desde el panel** (JPG, PNG, WebP o GIF, con tamaño máximo y texto alternativo obligatorio). El editor de patrones (partes y pasos) va al panel **más adelante**, cuando lo demás esté terminado.
+- **Perfil:** mis pedidos, mis datos y contraseña (pidiendo la actual) y borrar mi cuenta (con confirmación; los pedidos se conservan anónimos).
+- **Herramientas del Taller:**
+  - **¿Cuánta lana necesito?**: metros del patrón entre metros del ovillo, con un botón para añadir los ovillos al carrito.
+  - **Calculadora de muestra**: cuántas cadenetas montar y cuántas vueltas tejer a partir de la muestra.
+  - **Mi alijo de lanas**: inventario solo informativo; no se descuenta al usarlo.
+  - **Estadísticas**: vueltas tejidas por semana (hace falta guardar la fecha de cada vuelta) y proyectos terminados.
+- **Pantallas:** no hay diseño en Figma. Claude las propone a partir del logo y del sistema de diseño, y la autora va indicando los cambios.
+- **Originalidad del contenido:**
+  - El antiplagio se aplica a la memoria: no copiar en ella el texto de patrones ajenos (solo citas breves, entrecomilladas y con su autoría en APA).
+  - Antes de la entrega hay que sustituir el conejo (de limlenn) y también los patrones de ejemplo y los textos de los tutoriales que escribió Claude, por contenido propio de la autora.
+  - Consultarlo con el tutor/a, junto con la declaración del uso de IA.
+
 ## Orden de trabajo
 1. Backend: `package.json`, dependencias, `.env`, servidor Express, conexión `pg`.
 2. Migraciones SQL y datos de prueba (seed).
