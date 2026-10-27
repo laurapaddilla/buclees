@@ -44,6 +44,11 @@ async function send(path, { headers = {}, ...init }) {
   if (!response.ok) {
     const data = await response.json().catch(() => null);
     if (response.status === 401 && token) onUnauthorized();
+    // Un error 5xx sin respuesta JSON no viene de nuestra API: el servidor no está disponible
+    // (por ejemplo, el backend está apagado y el proxy de Vite no puede reenviar la petición).
+    if (!data && response.status >= 500) {
+      throw new ApiError(response.status, 'No hay conexión con el servidor. Inténtalo de nuevo en un momento.');
+    }
     throw new ApiError(response.status, data?.message ?? 'Algo ha fallado. Inténtalo de nuevo.', data?.details);
   }
   return response;
