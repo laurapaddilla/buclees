@@ -108,7 +108,9 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - **Dirección de envío copiada en el pedido** (nombre, dirección, ciudad, código postal y teléfono), como el precio de cada línea.
 - **Panel de admin:** productos (con colores y stock) y pedidos (cambiar el estado). **Imágenes subidas desde el panel** (JPG, PNG, WebP o GIF, con tamaño máximo y texto alternativo obligatorio). El editor de patrones (partes y pasos) va al panel **más adelante**, cuando lo demás esté terminado.
 - **Perfil:** mis pedidos, mis datos y contraseña (pidiendo la actual) y borrar mi cuenta (con confirmación; los pedidos se conservan anónimos).
-- **Herramientas del Taller:**
+- **Alcance cerrado (27/10/2026, a propuesta de Claude y con el acuerdo de la autora):** para que todo se pueda defender en el vídeo y quepa en la memoria, **se quedan fuera y pasan a "vías futuras"** el alijo de lanas, las estadísticas, la calculadora de lana y el editor de patrones en el panel. La calculadora de muestra queda como extra opcional, solo si sobra tiempo. Se mantienen las variantes de color (se revisará al construir la tienda).
+- **Orden:** primero la **landing** (inicio), después la tienda, el carrito, el pago y los pedidos, el perfil y el panel de admin.
+- **Herramientas del Taller (ideas recogidas; solo la de muestra sigue en el alcance):**
   - **¿Cuánta lana necesito?**: metros del patrón entre metros del ovillo, con un botón para añadir los ovillos al carrito.
   - **Calculadora de muestra**: cuántas cadenetas montar y cuántas vueltas tejer a partir de la muestra.
   - **Mi alijo de lanas**: inventario solo informativo; no se descuenta al usarlo.
