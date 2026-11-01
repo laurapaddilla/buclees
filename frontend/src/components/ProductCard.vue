@@ -1,0 +1,139 @@
+<script setup>
+import { computed } from 'vue';
+import { BBadge } from '@/design-system/components/index.js';
+import ProductArt from '@/components/ProductArt.vue';
+import { categoryOne } from '@/utils/labels.js';
+import { euros } from '@/utils/format.js';
+
+// Tarjeta de la tienda: toda ella enlaza a la ficha, donde se elige el color o el tamaño.
+const props = defineProps({
+  product: { type: Object, required: true },
+});
+
+const colors = computed(() => props.product.variants.filter((v) => v.color_hex));
+const sizes = computed(() => props.product.variants.filter((v) => !v.color_hex).map((v) => v.name));
+// El dibujo usa el primer color que queda en stock.
+const artColor = computed(() => (colors.value.find((v) => v.stock > 0) ?? colors.value[0])?.color_hex ?? null);
+const soldOut = computed(() => props.product.stock === 0);
+// El manual de marca pide un máximo de 5 muestras; el resto se cuenta.
+const MAX_SWATCHES = 5;
+</script>
+
+<template>
+  <RouterLink :to="`/tienda/${product.id}`" class="bc-card product">
+    <div class="product__media">
+      <img v-if="product.image_url" :src="product.image_url" alt="" class="product__img" />
+      <ProductArt
+        v-else
+        :category="product.category"
+        :color="artColor"
+        :hook-size="product.category === 'accesorio' ? product.hook_size : null"
+        label=""
+        aria-hidden="true"
+      />
+    </div>
+    <div class="bc-card__body product__body">
+      <p class="caption product__kind">
+        {{ categoryOne(product.category) }}<template v-if="product.yarn_weight"> · {{ product.yarn_weight }}</template>
+      </p>
+      <h3 class="bc-card__title product__title">{{ product.title }}</h3>
+      <p v-if="product.fiber" class="bc-card__meta">{{ product.fiber }}</p>
+
+      <p v-if="colors.length" class="product__swatches">
+        <span v-for="v in colors.slice(0, MAX_SWATCHES)" :key="v.id" class="bc-yarn__ball product__ball" :style="{ background: v.color_hex }" />
+        <span class="caption product__more">
+          {{ colors.length }} {{ colors.length === 1 ? 'color' : 'colores' }}
+        </span>
+      </p>
+      <p v-else-if="sizes.length" class="caption product__sizes">{{ sizes.join(' · ') }}</p>
+
+      <div class="product__foot">
+        <span class="bc-card__price">{{ euros(product.price) }}</span>
+        <BBadge v-if="soldOut">Agotado</BBadge>
+      </div>
+    </div>
+  </RouterLink>
+</template>
+
+<style scoped>
+.product {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.product:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.product__media {
+  padding: var(--space-4) var(--space-8) 0;
+  background: var(--surface-200);
+}
+
+.product__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  object-fit: cover;
+}
+
+.product__body {
+  flex: 1;
+  gap: var(--space-1);
+}
+
+.product__kind {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.product__title {
+  margin: 0;
+}
+
+.product__swatches {
+  display: flex;
+  align-items: center;
+  margin: var(--space-2) 0 0;
+}
+
+.product__ball {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+  margin-left: -8px;
+}
+
+.product__ball:first-child {
+  margin-left: 0;
+}
+
+.product__more {
+  margin-left: var(--space-2);
+  color: var(--ink-muted);
+}
+
+.product__sizes {
+  margin: var(--space-2) 0 0;
+  color: var(--ink-muted);
+  font-weight: 700;
+}
+
+.product__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.product__foot .bc-card__price {
+  margin: 0;
+}
+</style>

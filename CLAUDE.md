@@ -66,7 +66,7 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 
 ## API REST
 - `/api/auth`: `POST /register`, `POST /login` (devuelven `{ user, token }`) y `GET /me` (requiere token). Hecho.
-- `/api/products`: listar, filtrar por categoría, detalle. Crear/editar solo admin.
+- `/api/products`: `GET /` (`?category=ovillo|kit|accesorio`) y `GET /:id`, públicos y solo con productos activos. Cada producto lleva sus `variants` activas (`id`, `name`, `color_hex`, `stock`), `stock` (la suma de las variantes, o el suyo si no tiene) y `pattern_title` en los kits. Hecho (01/11/2026). Crear y editar (solo admin) irá en el panel.
 - `/api/patterns`: listar (filtrar por dificultad) y detalle con materiales, autoría y **partes con sus pasos**, públicos. Crear/editar solo admin (pendiente).
 - `POST /api/projects/:id/section` `{ section_id }` elige la parte que vas a tejer; `POST /api/projects/:id/section/complete` la termina (o pasa a la siguiente repetición). Los dos devuelven `{ project }` completo. Hecho.
 - `/api/projects` (todo con `authRequired`): `GET /`, `POST /` (acepta `start_row` y `target_rows`; crea proyecto y contador en una transacción), `GET /:id`, `PATCH /:id`, `DELETE /:id`. Hecho.
@@ -106,6 +106,11 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - **Ovillos con variantes de color, cada una con su stock.** Al comprar se elige el color (tabla de variantes nueva).
   - **Una sola foto por producto.**
   - **Dirección de envío copiada en el pedido** (nombre, dirección, ciudad, código postal y teléfono), como el precio de cada línea.
+- **Tienda, decisiones del 01/11/2026:**
+  - **Variantes genéricas** para cualquier producto: colores en ovillos y kits, tamaños en ganchillos. Una sola tabla `product_variants` (nombre, color opcional y stock). Un producto sin variantes usa `products.stock`.
+  - **Imágenes:** mientras no haya fotos, un **SVG generado** con el color de cada variante. La autora pasará fotos después.
+  - **Cancelar pedidos: solo la admin**, desde el panel. La usuaria solo ve sus pedidos.
+  - **Dirección:** el checkout propone la del último pedido y se puede cambiar (no hay tabla de direcciones).
 - **Panel de admin:** productos (con colores y stock) y pedidos (cambiar el estado). **Imágenes subidas desde el panel** (JPG, PNG, WebP o GIF, con tamaño máximo y texto alternativo obligatorio). El editor de patrones (partes y pasos) va al panel **más adelante**, cuando lo demás esté terminado.
 - **Perfil:** mis pedidos, mis datos y contraseña (pidiendo la actual) y borrar mi cuenta (con confirmación; los pedidos se conservan anónimos).
 - **Alcance cerrado (27/10/2026, a propuesta de Claude y con el acuerdo de la autora):** para que todo se pueda defender en el vídeo y quepa en la memoria, **se quedan fuera y pasan a "vías futuras"** el alijo de lanas, las estadísticas, la calculadora de lana y el editor de patrones en el panel. La calculadora de muestra queda como extra opcional, solo si sobra tiempo. Se mantienen las variantes de color (se revisará al construir la tienda).
@@ -179,10 +184,24 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - **Esquemas dibujados (migración 011, 01/11/2026; la autora pidió esquemas para todos los patrones: "si queda mal ya lo gestionaremos"):**
   - No se guardan imágenes. `pattern_sections.chart_shape` (`redondo`/`plano`) y `pattern_steps.chart` guardan el esquema en una notación corta, una línea por vuelta: `(2 pb, aum) x 6`, `am, 6 pb`, `base: 15 cad`, `ht: …` (por la hebra trasera) y `{3 pa}` (varios en el mismo punto). Un paso de varias vueltas iguales se dibuja una vez ("9-19").
   - `frontend/src/utils/chart.js` lee la notación y calcula las posiciones; `PatternChart.vue` dibuja el SVG con los símbolos internacionales (aumento V y disminución Λ, como en los esquemas de amigurumi) y una leyenda. En el contador, la vuelta actual se resalta en rosa (dentro de un `<details>` "Esquema" que se puede plegar).
-  - Los esquemas del seed están en `backend/src/db/seed-charts.js`, aparte del texto. `npm run seed:charts` los guarda **sin borrar nada** (solo UPDATE), así que se puede usar en `buclees_db`.
+  - Los esquemas del seed están en `backend/src/db/seed-charts.js`, aparte del texto. `npm run seed:update` los guarda **sin borrar nada** (solo UPDATE e INSERT de lo que falta), así que se puede usar en `buclees_db`. También añade las variantes de `seed-shop.js`.
   - Sin esquema: las orejas del conejo (erratas del original), las V 16-17 del vestido (sin recuento), el cuerpo del jersey y los pasos de texto sin recuento fijo. El granny se dibuja en círculo, no en cuadrado.
 - **Editor de patrones privado (decisión de la autora, 01/11/2026), se hace después de la tienda:** cada usuaria crea en el Taller sus propios patrones por partes y vueltas, con botones de puntos que escriben la notación de los esquemas y la vista previa del dibujo. **Solo los ve ella** y los usa con el contador. No se publican ni se comparten, así que se mantiene que solo la admin publica patrones. Inspiración: editor-crochet.molanmiscalcetas.es, pero mucho más simple. Se descartaron los patrones compartidos (habría que moderarlos).
-- **Primera propuesta del TFG: hay que enviarla el 03/11/2026.** La autora sube a `docs/` el esquema que debe seguir la memoria.
+- **Fechas:**
+  - **Entrega de seguimiento el 03/11/2026** (opcional según la normativa, pero la autora la hace). Se entrega la plantilla de la memoria (`docs/DAW_M12 Plantilla Memoria Escrita 1s2627(1).docx`) **sin código**. Revisan sobre todo los diagramas de casos de uso, entidad-relación y de clases, y la estructura. La propuesta del tema ya está aprobada.
+  - **Entrega final el 11/12/2026:** memoria en .docx y .pdf, vídeo .mp4, diapositivas y código en .zip, con los documentos en una carpeta de Google Drive.
+- **Tienda, bloque 1 hecho (01/11/2026): backend del catálogo.**
+  - Migración 012: `product_variants` y, en `order_items`, `variant_id` y `variant_name` (copia del nombre). La línea única pasa a ser `(order_id, product_id, variant_id)` con `NULLS NOT DISTINCT`. En `orders` se añaden `shipping_cost` y la dirección copiada (`ship_name`, `ship_address`, `ship_city`, `ship_postal_code`, `ship_phone`; nulos solo en pedidos antiguos).
+  - Las reglas del envío están en `utils/shipping.js` (como texto, para calcular con NUMERIC en SQL).
+  - Variantes del seed en `seed-shop.js`: 23 variantes. "Ganchillo ergonómico 4 mm" pasa a llamarse "Ganchillo ergonómico", con los tamaños 3,5, 4 y 5 mm. El pedido de Ana lleva variantes y dirección: 32,35 € + 3,95 € = 36,30 €.
+- **Tienda, bloque 2 hecho (01/11/2026): frontend del catálogo.**
+  - `/tienda` (`ShopView`): filtro por categoría en la dirección (`?categoria=ovillo`), con píldoras como las partes del patrón. `ProductCard` (toda la tarjeta enlaza a la ficha) muestra hasta 5 muestras de color o los tamaños, y "Agotado".
+  - `/tienda/:id` (`ProductView`): el selector de variantes son radios accesibles (muestra de color o píldora de tamaño; las agotadas, tachadas). Se elige de entrada la primera variante con stock. La cantidad no puede pasar del stock menos lo que ya hay en el carrito. Los kits enlazan a su patrón.
+  - `ProductArt`: SVG provisional (ovillo del color elegido, kit con hoja y ganchillo, ganchillo, bolsa u ovillos de colores). Si el producto tiene `image_url`, se usa la foto.
+  - `stores/cart.js` (Pinia): líneas por producto y variante, guardadas en localStorage con la clave `buclees_carrito`. Guarda el precio solo para mostrarlo: al pagar, el servidor lo recalcula.
+  - `utils/format.js` (`euros()` con Intl) y `CATEGORIES` en `labels.js`.
+  - Pruebas en el navegador: con la barra de pestañas fija, `page.click` puede caer en la barra si el botón queda en el borde inferior. Hay que usar `$eval(sel, b => b.click())`. Los selectores con ñ fallan en los scripts escritos desde la terminal.
+  - Siguiente: página del carrito y contador en la cabecera, pago y pedidos, y el panel.
 - **Pendiente:**
   - **Ilustraciones o GIF propios de los tutoriales**, en el estilo de la imagen de referencia de la autora (ilustración numerada de las manos tejiendo cadenetas). Deben ser propias o con licencia y con su fuente citada. Se rellenan en `tutorial_steps.image_url` e `image_alt`.
   - **Sustituir la demo del conejo** por un patrón propio de la autora.
@@ -193,6 +212,7 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).
 
 - **Guion de la memoria** (Claude Docs): https://claude.ai/artifact/4nDEHBnQmcQhCskQqcnzdD. Sigue la estructura de la normativa con material por apartado. Hay que actualizarlo al terminar cada bloque.
+- **Diagramas de referencia en el guion (01/11/2026), apartado 7:** E-R de las 13 tablas, casos de uso (CU01-CU17 enlazados con RF01-RF22) y clases de dominio, escritos en **Mermaid** para que la autora los pegue en draw.io (Organizar › Insertar › Avanzado › Mermaid) y los rehaga con su estilo. Al cambiar el esquema, hay que actualizarlos.
 - **La memoria la redacta la autora.** La normativa (punto 4) exige que sea original y de elaboración propia, y la pasa por un antiplagio. Claude aporta material, datos, diagramas de referencia y revisión, nunca el texto final.
 - **Puntos clave de la normativa:**
   - Memoria de 30-60 páginas, en Arial 11 con interlineado 1,5, entregada en Word y en PDF con la plantilla oficial.

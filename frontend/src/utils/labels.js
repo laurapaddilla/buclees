@@ -8,3 +8,11 @@ export const DIFFICULTY = {
   intermedio: { label: 'Intermedio', tone: 'amarillo' },
   avanzado: { label: 'Avanzado', tone: 'rosa' },
 };
+
+// Categorías de la tienda: en plural para los filtros y en singular para las tarjetas.
+export const CATEGORIES = [
+  { value: 'ovillo', plural: 'Ovillos', one: 'Ovillo' },
+  { value: 'kit', plural: 'Kits', one: 'Kit' },
+  { value: 'accesorio', plural: 'Accesorios', one: 'Accesorio' },
+];
+export const categoryOne = (value) => CATEGORIES.find((c) => c.value === value)?.one ?? value;

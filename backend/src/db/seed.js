@@ -7,6 +7,8 @@ import { pool } from './pool.js';
 import { tutorials } from './seed-tutorials.js';
 import { patterns } from './seed-patterns.js';
 import { applyCharts } from './seed-charts.js';
+import { applyVariants } from './seed-shop.js';
+import { FREE_SHIPPING_FROM, SHIPPING_COST, shippingSql } from '../utils/shipping.js';
 
 // Coste de bcrypt: cuántas rondas de cifrado. 10 es el valor habitual (equilibrio seguridad/velocidad).
 const SALT_ROUNDS = 10;
@@ -46,9 +48,9 @@ const products = [
     yarn_weight: 'Worsted', hook_size: '4,5 mm' },
 
   // Accesorios
-  { title: 'Ganchillo ergonómico 4 mm', category: 'accesorio', price: 6.5, stock: 20,
+  { title: 'Ganchillo ergonómico', category: 'accesorio', price: 6.5, stock: 20,
     description: 'Mango de silicona blanda para tejer durante horas sin cansar la mano.',
-    hook_size: '4 mm' },
+    hook_size: '3,5–5 mm' },
   { title: 'Marcadores de puntos (20 u.)', category: 'accesorio', price: 2.75, stock: 50,
     description: 'Marcadores de colores con cierre para señalar inicios de vuelta y aumentos.' },
   { title: 'Bolsa de almacenaje', category: 'accesorio', price: 12.5, stock: 10,
@@ -70,7 +72,16 @@ const anaProjects = [
 ];
 
 // Pedido entregado de Ana: { título del producto: cantidad }.
-const anaOrder = { 'Algodón DK': 3, 'Kit pulpo amigurumi': 1, 'Marcadores de puntos (20 u.)': 1 };
+// Pedido de Ana: [producto, variante o null, cantidad].
+const anaOrder = [
+  ['Algodón DK', 'Rosa chicle', 3],
+  ['Kit pulpo amigurumi', 'Rosa', 1],
+  ['Marcadores de puntos (20 u.)', null, 1],
+];
+const anaAddress = {
+  ship_name: 'Ana López', ship_address: 'Calle de la Lana 12, 2.º B', ship_city: 'Zaragoza',
+  ship_postal_code: '50001', ship_phone: '600 123 456',
+};
 
 function getAdminFromEnv() {
   const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
@@ -98,7 +109,7 @@ async function seed() {
 
     // Vacía las tablas y reinicia los ids para empezar siempre desde 1.
     await client.query(`
-      TRUNCATE project_sections_done, project_step_progress, pattern_steps, pattern_sections,
+      TRUNCATE product_variants, project_sections_done, project_step_progress, pattern_steps, pattern_sections,
                project_counters_notes, projects,
                order_items, orders, products, patterns, users, tutorial_steps, tutorials
       RESTART IDENTITY CASCADE
@@ -201,24 +212,35 @@ async function seed() {
       }
     }
 
-    // Pedido de Ana: precios y total salen de la BD, igual que hará la API.
+    // Variantes de los productos (archivo aparte): colores y tamaños, cada uno con su stock.
+    const shop = await applyVariants(client);
+    if (shop.missing.length) throw new Error(`Variantes de productos que no existen: ${shop.missing.join(', ')}`);
+
+    // Pedido de Ana: precios, envío y total salen de la BD, igual que hará la API.
     const { rows: [order] } = await client.query(
-      `INSERT INTO orders (user_id, total, status) VALUES ($1, 0, 'entregado') RETURNING id`,
-      [anaId],
+      `INSERT INTO orders (user_id, total, status, ship_name, ship_address, ship_city, ship_postal_code, ship_phone)
+       VALUES ($1, 0, 'entregado', $2, $3, $4, $5, $6) RETURNING id`,
+      [anaId, ...Object.values(anaAddress)],
     );
-    for (const [title, quantity] of Object.entries(anaOrder)) {
+    for (const [title, variant, quantity] of anaOrder) {
       const productId = productIds[title];
+      const { rows: [v] } = variant
+        ? await client.query('SELECT id, name FROM product_variants WHERE product_id = $1 AND name = $2', [productId, variant])
+        : { rows: [null] };
       await client.query(
-        `INSERT INTO order_items (order_id, product_id, quantity, unit_price)
-         SELECT $1, id, $2, price FROM products WHERE id = $3`,
-        [order.id, quantity, productId],
+        `INSERT INTO order_items (order_id, product_id, variant_id, variant_name, quantity, unit_price)
+         SELECT $1, id, $2, $3, $4, price FROM products WHERE id = $5`,
+        [order.id, v?.id ?? null, v?.name ?? null, quantity, productId],
       );
-      await client.query('UPDATE products SET stock = stock - $1 WHERE id = $2', [quantity, productId]);
+      if (v) await client.query('UPDATE product_variants SET stock = stock - $1 WHERE id = $2', [quantity, v.id]);
+      else await client.query('UPDATE products SET stock = stock - $1 WHERE id = $2', [quantity, productId]);
     }
     await client.query(
-      `UPDATE orders SET total = (SELECT SUM(quantity * unit_price) FROM order_items WHERE order_id = $1)
-       WHERE id = $1`,
-      [order.id],
+      `WITH s AS (SELECT SUM(quantity * unit_price) AS subtotal FROM order_items WHERE order_id = $1)
+       UPDATE orders SET shipping_cost = ${shippingSql('s.subtotal', '$2', '$3')},
+                         total = s.subtotal + ${shippingSql('s.subtotal', '$2', '$3')}
+       FROM s WHERE id = $1`,
+      [order.id, FREE_SHIPPING_FROM, SHIPPING_COST],
     );
 
     // Esquemas dibujados de los patrones (archivo aparte).
@@ -230,7 +252,7 @@ async function seed() {
     console.log('Seed completado:');
     console.log(`  admin:    ${admin.email} (contraseña de .env)`);
     for (const u of testUsers) console.log(`  usuario:  ${u.email} / ${TEST_PASSWORD}`);
-    console.log(`  ${products.length} productos, ${patterns.length} patrones, ${anaProjects.length} proyectos, 1 pedido`);
+    console.log(`  ${products.length} productos (${shop.created} variantes), ${patterns.length} patrones, ${anaProjects.length} proyectos, 1 pedido`);
     console.log(`  ${tutorials.length} tutoriales de puntos básicos, ${charts.steps} pasos con esquema`);
   } catch (err) {
     await client.query('ROLLBACK');

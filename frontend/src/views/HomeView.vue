@@ -114,7 +114,7 @@ function followCardLink(event) {
           <span class="bc-pattern__media is-placeholder tile__preview tile__preview--dots" aria-hidden="true" />
           <span class="tile__text">
             <span class="bc-card__title tile__title">Patrones</span>
-            <span class="body-sm tile__sub">{{ patterns.length ? `${patterns.length} gratis, paso a paso` : 'Gratis, paso a paso' }}</span>
+            <span class="body-sm tile__sub">Gratis, paso a paso y con esquema</span>
           </span>
           <span class="tile__go" aria-hidden="true">→</span>
         </RouterLink>
