@@ -80,6 +80,12 @@ const MAX_SWATCHES = 5;
   background: var(--surface-200);
 }
 
+/* El dibujo no crece más de 260px aunque la tarjeta ocupe todo el ancho del móvil. */
+.product__media > :deep(.art) {
+  max-width: 260px;
+  margin: 0 auto;
+}
+
 /* Con foto: sin márgenes, recortada al mismo alto que el dibujo (200 × 160 = 5:4). */
 .product__media.has-photo {
   padding: 0;

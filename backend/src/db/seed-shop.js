@@ -10,7 +10,9 @@ export const variants = {
   ],
   'Merino Worsted': [['Oliva', '#6f7a35', 8], ['Crema', '#efe4c8', 7], ['Rosa empolvado', '#d9a0a8', 5], ['Mostaza', '#d39e2a', 5]],
   'Algodón Fingering': [
-    ['Blanco roto', '#f6f1e5', 10], ['Lavanda', '#b8a6d9', 10], ['Salvia', '#9fb59a', 10],
+    ['Blanco roto', '#efe8d8', 10, '/productos/algodon-fingering-blanco-roto.jpg'],
+    ['Lavanda', '#c9b2e4', 10, '/productos/algodon-fingering-lavanda.jpg'],
+    ['Salvia', '#a6b9a3', 10, '/productos/algodon-fingering-salvia.jpg'],
     ['Rosa', '#ee8fc1', 10, '/productos/algodon-fingering-rosa.jpg'],
   ],
   'Chenilla Bulky': [['Amarillo', '#f2c94c', 5], ['Rosa', '#f4a6c6', 5], ['Gris', '#8c8c8c', 0]],
@@ -23,7 +25,8 @@ export const variants = {
 // Productos renombrados después de crearse (para actualizar bases ya sembradas).
 const renamed = { 'Ganchillo ergonómico 4 mm': 'Ganchillo ergonómico' };
 
-// Crea las variantes que falten. De las que ya existen solo pone la foto si el seed tiene una (nunca toca el stock).
+// Crea las variantes que falten. De las que ya existen, si el seed trae foto, pone la foto y su color
+// (sacado de la foto, para que la muestra coincida). Nunca toca el stock.
 // Las nuevas van al final (posición siguiente), para no chocar con las posiciones de una base ya sembrada.
 // Un producto con variantes pasa a tener products.stock = 0: su stock está en las variantes.
 // db: pool o el cliente de una transacción.
@@ -43,7 +46,9 @@ export async function applyVariants(db) {
       const { rows: [v] } = await db.query(
         `INSERT INTO product_variants (product_id, position, name, color_hex, stock, image_url)
          VALUES ($1, (SELECT COALESCE(MAX(position), 0) + 1 FROM product_variants WHERE product_id = $1), $2, $3, $4, $5)
-         ON CONFLICT (product_id, name) DO UPDATE SET image_url = COALESCE(EXCLUDED.image_url, product_variants.image_url)
+         ON CONFLICT (product_id, name) DO UPDATE SET
+           image_url = COALESCE(EXCLUDED.image_url, product_variants.image_url),
+           color_hex = CASE WHEN EXCLUDED.image_url IS NULL THEN product_variants.color_hex ELSE EXCLUDED.color_hex END
          RETURNING (xmax = 0) AS inserted`,
         [rows[0].id, name, color, stock, image ?? null],
       );

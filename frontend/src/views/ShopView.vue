@@ -35,6 +35,12 @@ const filters = [{ value: null, plural: 'Todo' }, ...CATEGORIES];
   <section class="page">
     <h1 class="h1 page-title">Tienda</h1>
     <p class="body page-intro">Envío 3,95 € · gratis a partir de 40 €.</p>
+    <!-- Foto de ovillos de Buclees. Generada con IA (Gemini), declarado en la memoria. -->
+    <img
+      src="/fotos/ovillos-composicion-ia.jpg"
+      alt="Ovillos de Buclees en rosa, amarillo y oliva (imagen generada con IA)"
+      class="banner"
+    />
 
     <nav class="filters" aria-label="Categorías">
       <RouterLink
@@ -65,6 +71,23 @@ const filters = [{ value: null, plural: 'Todo' }, ...CATEGORIES];
 </template>
 
 <style scoped>
+/* Banner: la composición de ovillos recortada en horizontal. */
+.banner {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  margin: 0 0 var(--space-6);
+  object-fit: cover;
+  object-position: center 45%;
+  border-radius: var(--radius-lg);
+}
+
+@media (min-width: 768px) {
+  .banner {
+    aspect-ratio: 4 / 1;
+  }
+}
+
 /* Filtros: píldoras que se deslizan en horizontal en el móvil sin ensanchar la página. */
 .filters {
   display: flex;

@@ -69,7 +69,16 @@ function followCardLink(event) {
         <h1 class="h1 home__title">{{ auth.isAuthenticated ? `Hola, ${firstName}` : 'El arte de tejer tu propio mundo' }}</h1>
         <p v-if="auth.isAuthenticated" class="body home__sub">¿Seguimos tejiendo?</p>
       </div>
-      <div class="home__art"><YarnBalls /></div>
+      <div class="home__art">
+        <YarnBalls v-if="auth.isAuthenticated" />
+        <!-- Sin sesión: foto de ovillos de Buclees. Generada con IA (Gemini), declarado en la memoria. -->
+        <img
+          v-else
+          src="/fotos/ovillos-torre-ia.jpg"
+          alt="Tres ovillos de Buclees apilados, en amarillo, rosa y oliva (imagen generada con IA)"
+          class="home__photo"
+        />
+      </div>
     </header>
 
     <!-- ===================== Con sesión ===================== -->
@@ -213,6 +222,26 @@ function followCardLink(event) {
   }
   .home__art {
     order: 0;
+  }
+}
+
+/* La foto: apaisada en el móvil (sobre el título) y vertical en la columna de la derecha en pantallas grandes. */
+.home__photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center 40%;
+  border-radius: var(--radius-lg);
+}
+
+.home__art:has(.home__photo) {
+  max-width: none;
+}
+
+@media (min-width: 560px) {
+  .home__photo {
+    aspect-ratio: 3 / 4;
   }
 }
 
