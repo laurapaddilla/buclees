@@ -23,6 +23,10 @@ const added = ref('');
 const variant = computed(() => product.value?.variants.find((v) => v.id === variantId.value) ?? null);
 // Foto del color elegido; si no tiene, la del producto; si tampoco, el ovillo dibujado.
 const photo = computed(() => variant.value?.image_url ?? product.value?.image_url ?? null);
+// Texto alternativo de esa misma foto, el que escribió la admin al subirla.
+const photoAlt = computed(() =>
+  variant.value?.image_url ? variant.value.image_alt : product.value?.image_alt ?? product.value?.title,
+);
 const hasVariants = computed(() => product.value?.variants.length > 0);
 const isColor = computed(() => product.value?.variants.some((v) => v.color_hex));
 // Stock de lo que se va a comprar: la variante elegida o el producto sin variantes.
@@ -88,7 +92,7 @@ function addToCart() {
 
     <div v-else class="item">
       <div :class="['item__media', { 'has-photo': photo }]">
-        <img v-if="photo" :src="photo" :alt="variant ? `${product.title}, ${variant.name}` : product.title" class="item__img" />
+        <img v-if="photo" :src="photo" :alt="photoAlt" class="item__img" />
         <ProductArt
           v-else
           :category="product.category"
