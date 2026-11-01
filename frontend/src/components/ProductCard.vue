@@ -75,27 +75,32 @@ const MAX_SWATCHES = 5;
   outline-offset: 2px;
 }
 
+/* Hueco vertical 3:4, como las fotos de la autora. Con foto o con dibujo mide lo mismo,
+   así los títulos de una fila quedan alineados. */
 .product__media {
-  padding: var(--space-4) var(--space-8) 0;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  padding: var(--space-4);
   background: var(--surface-200);
 }
 
 /* El dibujo no crece más de 260px aunque la tarjeta ocupe todo el ancho del móvil. */
 .product__media > :deep(.art) {
   max-width: 260px;
-  margin: 0 auto;
 }
 
-/* Con foto: sin márgenes, recortada al mismo alto que el dibujo (200 × 160 = 5:4). */
+/* Con foto: la foto ENTERA (contain, sin recortar el ovillo) sobre blanco, que es el fondo de las fotos. */
 .product__media.has-photo {
   padding: 0;
+  background: #fff;
 }
 
 .product__img {
   display: block;
   width: 100%;
-  aspect-ratio: 5 / 4;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
 }
 
 .product__body {
