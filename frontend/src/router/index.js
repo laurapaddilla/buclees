@@ -10,6 +10,7 @@ const routes = [
   { path: '/perfil', name: 'profile', component: () => import('@/views/ProfileView.vue') },
   { path: '/tienda', name: 'shop', component: () => import('@/views/ShopView.vue') },
   { path: '/tienda/:id(\\d+)', name: 'product', component: () => import('@/views/ProductView.vue') },
+  { path: '/carrito', name: 'cart', component: () => import('@/views/CartView.vue') },
   { path: '/patrones', name: 'patterns', component: () => import('@/views/PatternsView.vue') },
   { path: '/patrones/:id(\\d+)', name: 'pattern', component: () => import('@/views/PatternView.vue') },
   { path: '/tutoriales', name: 'tutorials', component: () => import('@/views/TutorialsView.vue') },

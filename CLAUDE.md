@@ -201,7 +201,13 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - `stores/cart.js` (Pinia): líneas por producto y variante, guardadas en localStorage con la clave `buclees_carrito`. Guarda el precio solo para mostrarlo: al pagar, el servidor lo recalcula.
   - `utils/format.js` (`euros()` con Intl) y `CATEGORIES` en `labels.js`.
   - Pruebas en el navegador: con la barra de pestañas fija, `page.click` puede caer en la barra si el botón queda en el borde inferior. Hay que usar `$eval(sel, b => b.click())`. Los selectores con ñ fallan en los scripts escritos desde la terminal.
-  - Siguiente: página del carrito y contador en la cabecera, pago y pedidos, y el panel.
+- **Tienda, bloque 3 hecho (01/11/2026): carrito.**
+  - `/carrito` (`CartView`): líneas con cantidad (`QtyStepper`, compartido con la ficha) y Quitar, resumen (productos, envío y total) y aviso "Te faltan X € para el envío gratis" con barra. "Tramitar pedido" lleva a `/pagar` (bloque 4).
+  - Al abrir el carrito, `cart.sync(products)` lo pone al día con el catálogo: precio, stock, retirados y agotados, con avisos para la usuaria.
+  - El resumen se calcula en **céntimos enteros** (`utils/shipping.js` del frontend, con las mismas reglas que el backend). Es solo informativo: cobra el servidor.
+  - Cabecera: icono de bolsa con el número de artículos, siempre visible (en el móvil, a la derecha del logo).
+  - `Intl` pone un espacio de no separación (U+00A0) antes del €: las pruebas tienen que normalizarlo.
+  - Siguiente: pago y pedidos (bloque 4) y el panel.
 - **Pendiente:**
   - **Ilustraciones o GIF propios de los tutoriales**, en el estilo de la imagen de referencia de la autora (ilustración numerada de las manos tejiendo cadenetas). Deben ser propias o con licencia y con su fuente citada. Se rellenan en `tutorial_steps.image_url` e `image_alt`.
   - **Sustituir la demo del conejo** por un patrón propio de la autora.

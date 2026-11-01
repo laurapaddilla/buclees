@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BBadge, BButton } from '@/design-system/components/index.js';
 import ProductArt from '@/components/ProductArt.vue';
+import QtyStepper from '@/components/QtyStepper.vue';
 import { getProduct } from '@/services/products.js';
 import { useCartStore } from '@/stores/cart.js';
 import { categoryOne } from '@/utils/labels.js';
@@ -64,10 +65,6 @@ watch(variantId, () => {
   quantity.value = 1;
   added.value = '';
 });
-
-function change(delta) {
-  quantity.value = Math.min(Math.max(1, quantity.value + delta), Math.max(1, available.value));
-}
 
 function addToCart() {
   const n = cart.add(product.value, variant.value, quantity.value);
@@ -137,11 +134,7 @@ function addToCart() {
         </p>
 
         <div v-if="stock > 0" class="buy">
-          <div class="qty" role="group" aria-label="Cantidad">
-            <button type="button" class="qty__btn" aria-label="Quitar una" :disabled="quantity <= 1" @click="change(-1)">−</button>
-            <output class="qty__num" aria-live="polite">{{ quantity }}</output>
-            <button type="button" class="qty__btn" aria-label="Añadir una" :disabled="quantity >= available" @click="change(1)">+</button>
-          </div>
+          <QtyStepper v-model="quantity" :max="available" />
           <BButton icon="bag" :disabled="available === 0" class="buy__add" @click="addToCart">Añadir al carrito</BButton>
         </div>
         <p v-if="inCart && stock > 0" class="caption item__incart">Ya tienes {{ inCart }} en el carrito.</p>
@@ -341,40 +334,6 @@ function addToCart() {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-}
-
-.qty {
-  display: inline-flex;
-  align-items: center;
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius-pill);
-  background: var(--surface-raised);
-}
-
-.qty__btn {
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: none;
-  color: var(--ink);
-  font-size: 22px;
-  cursor: pointer;
-}
-
-.qty__btn:disabled {
-  color: var(--line-strong);
-  cursor: default;
-}
-
-.qty__btn:focus-visible {
-  outline: 2px solid var(--focus);
-}
-
-.qty__num {
-  min-width: 2ch;
-  text-align: center;
-  font-weight: 700;
 }
 
 .buy__add {

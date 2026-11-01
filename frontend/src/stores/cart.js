@@ -63,6 +63,34 @@ export const useCartStore = defineStore('cart', () => {
     items.value = [];
   }
 
+  // Pone al día el carrito con el catálogo actual (precio, stock, retirados).
+  // Devuelve avisos para la usuaria: lo que ya no está o lo que se ha reducido.
+  function sync(products) {
+    const notices = [];
+    for (const line of [...items.value]) {
+      const product = products.find((p) => p.id === line.productId);
+      const variant = line.variantId ? product?.variants.find((v) => v.id === line.variantId) : null;
+      const name = line.variantName ? `${line.title} (${line.variantName})` : line.title;
+      if (!product || (line.variantId && !variant)) {
+        remove(line.key);
+        notices.push(`${name} ya no está a la venta y se ha quitado del carrito.`);
+        continue;
+      }
+      line.title = product.title;
+      line.price = product.price;
+      line.imageUrl = product.image_url ?? null;
+      line.stock = variant ? variant.stock : product.stock;
+      if (line.stock === 0) {
+        remove(line.key);
+        notices.push(`${name} se ha agotado y se ha quitado del carrito.`);
+      } else if (line.quantity > line.stock) {
+        line.quantity = line.stock;
+        notices.push(`De ${name} solo quedan ${line.stock}: se ha ajustado la cantidad.`);
+      }
+    }
+    return notices;
+  }
+
   // Cada cambio se guarda en el navegador (si el navegador lo bloquea, el carrito sigue en memoria).
   watch(
     items,
@@ -76,5 +104,5 @@ export const useCartStore = defineStore('cart', () => {
     { deep: true },
   );
 
-  return { items, count, add, setQuantity, remove, clear };
+  return { items, count, add, setQuantity, remove, clear, sync };
 });
