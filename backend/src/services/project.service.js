@@ -1,5 +1,6 @@
 import { pool, query } from '../db/pool.js';
 import { HttpError } from '../utils/HttpError.js';
+import { buildSet } from '../utils/buildSet.js';
 import { isPdf, pdfPath, removePdfFile, savePdfFile } from '../utils/uploads.js';
 import { loadSections } from './pattern.service.js';
 
@@ -30,16 +31,6 @@ async function assertPatternExists(patternId) {
   if (rowCount === 0) {
     throw new HttpError(400, 'El patrón elegido no existe', [{ field: 'pattern_id', message: 'El patrón elegido no existe' }]);
   }
-}
-
-// Construye "SET col1 = $3, col2 = $4" solo con los campos recibidos.
-// Los nombres de columna salen de una lista fija, nunca de lo que envía el cliente.
-function buildSet(data, allowed, firstParam) {
-  const columns = allowed.filter((col) => data[col] !== undefined);
-  return {
-    sql: columns.map((col, i) => `${col} = $${firstParam + i}`).join(', '),
-    values: columns.map((col) => data[col]),
-  };
 }
 
 // Ejecuta fn dentro de una transacción con un cliente propio: o se aplica todo o nada.

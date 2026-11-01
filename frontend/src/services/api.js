@@ -73,10 +73,11 @@ export async function apiBytes(path) {
 }
 
 // Sube un archivo tal cual en el cuerpo de la petición; su nombre va en la cabecera X-File-Name.
-export async function apiUpload(path, file) {
+// extraHeaders: otras cabeceras, p. ej. el texto alternativo de una foto (X-Image-Alt).
+export async function apiUpload(path, file, extraHeaders = {}) {
   const response = await send(path, {
     method: 'PUT',
-    headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
+    headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name), ...extraHeaders },
     body: file,
   });
   return response.json();

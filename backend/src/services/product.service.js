@@ -6,7 +6,7 @@ const CATEGORIES = ['ovillo', 'kit', 'accesorio'];
 // Producto con sus variantes activas en orden y el stock disponible:
 // el de las variantes sumado si las tiene, o el suyo si no.
 const PRODUCT_SELECT = `
-  SELECT p.id, p.title, p.description, p.price, p.category, p.image_url,
+  SELECT p.id, p.title, p.description, p.price, p.category, p.image_url, p.image_alt,
          p.hook_size, p.yarn_weight, p.fiber, p.meters,
          p.pattern_id, pa.title AS pattern_title,
          COALESCE(v.variants, '[]') AS variants,
@@ -14,7 +14,7 @@ const PRODUCT_SELECT = `
   FROM products p
   LEFT JOIN patterns pa ON pa.id = p.pattern_id AND pa.is_active
   LEFT JOIN LATERAL (
-    SELECT json_agg(json_build_object('id', id, 'name', name, 'color_hex', color_hex, 'stock', stock, 'image_url', image_url)
+    SELECT json_agg(json_build_object('id', id, 'name', name, 'color_hex', color_hex, 'stock', stock, 'image_url', image_url, 'image_alt', image_alt)
                     ORDER BY position) AS variants,
            SUM(stock)::int AS stock
     FROM product_variants

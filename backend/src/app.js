@@ -9,6 +9,7 @@ import productRoutes from './routes/product.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import tutorialRoutes from './routes/tutorial.routes.js';
+import { IMAGES_DIR } from './utils/images.js';
 
 const app = express();
 
@@ -29,6 +30,9 @@ app.get('/api/health/db', async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
+
+// Fotos subidas desde el panel: públicas y con nombre aleatorio que no cambia, así que se pueden guardar en caché.
+app.use('/api/images', express.static(IMAGES_DIR, { maxAge: '30d', immutable: true, dotfiles: 'deny', index: false }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
@@ -53,9 +57,10 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ message: 'El cuerpo de la petición no es un JSON válido' });
   }
-  // Cuerpo más grande que el límite (el PDF admite 10 MB; el JSON, 100 KB).
+  // Cuerpo más grande que el límite de esa ruta (PDF 10 MB, imágenes 3 MB, JSON 100 KB).
   if (err.type === 'entity.too.large') {
-    return res.status(413).json({ message: 'El archivo es demasiado grande. El máximo son 10 MB.' });
+    const mb = Math.round(err.limit / (1024 * 1024));
+    return res.status(413).json({ message: `El archivo es demasiado grande. El máximo son ${mb} MB.` });
   }
   // Cualquier otro error: se registra en la consola y no se dan detalles internos al cliente.
   console.error(err);

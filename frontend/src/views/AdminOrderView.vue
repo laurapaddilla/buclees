@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BBadge, BButton } from '@/design-system/components/index.js';
+import AdminNav from '@/components/AdminNav.vue';
 import OrderDetail from '@/components/OrderDetail.vue';
 import { adminGetOrder, adminSetOrderStatus } from '@/services/admin.js';
 import { orderDate } from '@/utils/format.js';
@@ -52,6 +53,7 @@ watch(() => route.params.id, (id) => id && load(id), { immediate: true });
 
 <template>
   <section class="page">
+    <AdminNav />
     <RouterLink to="/admin/pedidos" class="body-sm back-link">← Pedidos</RouterLink>
 
     <p v-if="loading" class="notice" aria-live="polite">Cargando el pedido…</p>

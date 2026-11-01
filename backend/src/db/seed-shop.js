@@ -76,13 +76,15 @@ export async function applyVariants(db) {
     }
     for (const [name, color, stock, image] of list) {
       const { rows: [v] } = await db.query(
-        `INSERT INTO product_variants (product_id, position, name, color_hex, stock, image_url)
-         VALUES ($1, (SELECT COALESCE(MAX(position), 0) + 1 FROM product_variants WHERE product_id = $1), $2, $3, $4, $5)
+        `INSERT INTO product_variants (product_id, position, name, color_hex, stock, image_url, image_alt)
+         VALUES ($1, (SELECT COALESCE(MAX(position), 0) + 1 FROM product_variants WHERE product_id = $1), $2, $3, $4, $5, $6)
          ON CONFLICT (product_id, name) DO UPDATE SET
            image_url = COALESCE(EXCLUDED.image_url, product_variants.image_url),
+           image_alt = COALESCE(EXCLUDED.image_alt, product_variants.image_alt),
            color_hex = CASE WHEN EXCLUDED.image_url IS NULL THEN product_variants.color_hex ELSE EXCLUDED.color_hex END
          RETURNING (xmax = 0) AS inserted`,
-        [rows[0].id, name, color, stock, image ?? null],
+        // Texto alternativo obligatorio con foto (migración 014): «Algodón DK, Rosa chicle».
+        [rows[0].id, name, color, stock, image ?? null, image ? `${title}, ${name}` : null],
       );
       if (v.inserted) created++;
     }

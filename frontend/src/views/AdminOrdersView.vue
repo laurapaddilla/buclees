@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BBadge } from '@/design-system/components/index.js';
+import AdminNav from '@/components/AdminNav.vue';
 import { adminListOrders } from '@/services/admin.js';
 import { euros, orderDate } from '@/utils/format.js';
 import { ORDER_STATUS } from '@/utils/labels.js';
@@ -33,7 +34,7 @@ const filters = [{ value: null, label: 'Todos' }, ...Object.entries(ORDER_STATUS
 
 <template>
   <section class="page">
-    <p class="label admin-eyebrow">PANEL DE ADMIN</p>
+    <AdminNav />
     <h1 class="h1 page-title">Pedidos</h1>
 
     <nav class="filters" aria-label="Estado del pedido">
@@ -74,11 +75,6 @@ const filters = [{ value: null, label: 'Todos' }, ...Object.entries(ORDER_STATUS
 </template>
 
 <style scoped>
-.admin-eyebrow {
-  margin: 0 0 var(--space-1);
-  color: var(--rosa-strong);
-}
-
 .filters {
   display: flex;
   gap: var(--space-2);
