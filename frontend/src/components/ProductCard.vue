@@ -75,9 +75,11 @@ const MAX_SWATCHES = 5;
   outline-offset: 2px;
 }
 
-/* Hueco vertical 3:4, como las fotos de la autora. Con foto o con dibujo mide lo mismo,
-   así los títulos de una fila quedan alineados. */
+/* Marco fijo 3:4 para todas las tarjetas, con foto o con dibujo: la imagen no puede cambiar su altura
+   y los títulos de una fila quedan alineados. Las fotos se preparan a 900 × 1200 (3:4) con el ovillo
+   centrado y a la misma escala, así que llenan el marco sin recortar el ovillo. */
 .product__media {
+  position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 3 / 4;
@@ -90,17 +92,16 @@ const MAX_SWATCHES = 5;
   max-width: 260px;
 }
 
-/* Con foto: la foto ENTERA (contain, sin recortar el ovillo) sobre blanco, que es el fondo de las fotos. */
 .product__media.has-photo {
   padding: 0;
-  background: #fff;
 }
 
 .product__img {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .product__body {

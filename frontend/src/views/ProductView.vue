@@ -208,24 +208,24 @@ function addToCart() {
 }
 
 /* Con foto: la foto ocupa la caja (vertical, como las de la autora), sin el fondo crema alrededor. */
-/* Con foto: la foto ENTERA (contain, sin recortar el ovillo) sobre blanco, que es el fondo de las fotos.
-   En escritorio, vertical 3:4 como las fotos; en el móvil, cuadrada para que el botón de comprar no quede tan abajo. */
+/* Con foto: marco fijo 3:4, igual que las tarjetas (las fotos miden 900 × 1200).
+   En el móvil, como mucho 300px de ancho para que el color y el botón de comprar se vean pronto. */
 .item__media.has-photo {
   padding: 0;
   overflow: hidden;
-  background: #fff;
 }
 
 .item__img {
   display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 @media (max-width: 859px) {
-  .item__img {
-    aspect-ratio: 1;
+  .item__media.has-photo {
+    max-width: 300px;
+    margin: 0 auto;
   }
 }
 
