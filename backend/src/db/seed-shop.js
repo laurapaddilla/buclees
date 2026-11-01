@@ -5,8 +5,11 @@
 
 export const variants = {
   'Algodón DK': [
-    ['Rosa chicle', '#f29cc0', 12], ['Oliva', '#7d8a3a', 10], ['Mostaza', '#e2b33c', 8],
-    ['Crudo', '#f3ead6', 6], ['Gris perla', '#b9b4ab', 4],
+    ['Rosa chicle', '#eb94b4', 12, '/productos/algodon-dk-rosa-chicle.jpg'],
+    ['Oliva', '#5f5c2e', 10, '/productos/algodon-dk-oliva.jpg'],
+    ['Mostaza', '#d69f2c', 8, '/productos/algodon-dk-mostaza.jpg'],
+    ['Beige', '#9f7f5a', 6, '/productos/algodon-dk-beige.jpg'],
+    ['Gris perla', '#c0bfc3', 4, '/productos/algodon-dk-gris-perla.jpg'],
   ],
   'Merino Worsted': [['Oliva', '#6f7a35', 8], ['Crema', '#efe4c8', 7], ['Rosa empolvado', '#d9a0a8', 5], ['Mostaza', '#d39e2a', 5]],
   'Algodón Fingering': [
@@ -15,7 +18,12 @@ export const variants = {
     ['Salvia', '#a6b9a3', 10, '/productos/algodon-fingering-salvia.jpg'],
     ['Rosa', '#ee8fc1', 10, '/productos/algodon-fingering-rosa.jpg'],
   ],
-  'Chenilla Bulky': [['Amarillo', '#f2c94c', 5], ['Rosa', '#f4a6c6', 5], ['Gris', '#8c8c8c', 0]],
+  // Azul con stock 0: sirve para enseñar un color agotado.
+  'Chenilla Bulky': [
+    ['Mostaza', '#e79809', 5, '/productos/chenilla-bulky-mostaza.jpg'],
+    ['Rosa', '#fa84bc', 5, '/productos/chenilla-bulky-rosa.jpg'],
+    ['Azul', '#1b66ce', 0, '/productos/chenilla-bulky-azul.jpg'],
+  ],
   'Ovillo edición otoño': [['Teja', '#b5552e', 0]],
   'Kit pulpo amigurumi': [['Rosa', '#f29cc0', 6], ['Amarillo', '#f2c94c', 6]],
   'Ganchillo ergonómico': [['3,5 mm', null, 8], ['4 mm', null, 8], ['5 mm', null, 4]],
@@ -24,6 +32,12 @@ export const variants = {
 
 // Productos renombrados después de crearse (para actualizar bases ya sembradas).
 const renamed = { 'Ganchillo ergonómico 4 mm': 'Ganchillo ergonómico' };
+
+// Variantes renombradas para que coincidan con las fotos de la autora (01/11/2026).
+const renamedVariants = {
+  'Algodón DK': { Crudo: 'Beige' },
+  'Chenilla Bulky': { Amarillo: 'Mostaza', Gris: 'Azul' },
+};
 
 // Metraje corregido después de crearse: el que pone la etiqueta de la foto de la autora.
 const meters = { 'Algodón Fingering': '212 m / 100 g' };
@@ -36,6 +50,18 @@ const meters = { 'Algodón Fingering': '212 m / 100 g' };
 export async function applyVariants(db) {
   for (const [from, to] of Object.entries(renamed)) {
     await db.query('UPDATE products SET title = $2 WHERE title = $1', [from, to]);
+  }
+  for (const [title, names] of Object.entries(renamedVariants)) {
+    for (const [from, to] of Object.entries(names)) {
+      // Solo si el nombre nuevo no existe ya en ese producto (no se crean colores repetidos).
+      await db.query(
+        `UPDATE product_variants v SET name = $3
+         FROM products p
+         WHERE p.id = v.product_id AND p.title = $1 AND v.name = $2
+           AND NOT EXISTS (SELECT 1 FROM product_variants w WHERE w.product_id = p.id AND w.name = $3)`,
+        [title, from, to],
+      );
+    }
   }
   for (const [title, value] of Object.entries(meters)) {
     await db.query('UPDATE products SET meters = $2 WHERE title = $1', [title, value]);
