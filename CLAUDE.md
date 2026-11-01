@@ -24,7 +24,7 @@ La funcionalidad estrella es la vista de trabajo del proyecto: contador de filas
 - Frontend: Vue 3 + Vite + Vue Router + Pinia.
 - Estructura backend: `routes/ → controllers/ → services/ → db/`, más `middleware/` y `migrations/`.
 
-## Base de datos (13 tablas, scripts SQL de migración)
+## Base de datos (14 tablas, scripts SQL de migración 001-014)
 
 Especificación original (6 tablas); el 25/10/2026 se añadió `patterns` (ver "Esquema implementado").
 1. `users`: id, nombre, email (único), contraseña cifrada, rol (`user` / `admin`, con CHECK).
@@ -236,17 +236,18 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - Siguiente: el perfil (datos, contraseña pidiendo la actual y borrar cuenta, con los pedidos conservados de forma anónima).
 - **Pendiente:**
   - **Tutoriales sin imagen por ahora** (decisión de la autora, 01/11/2026: "es mucho lío"). El paso solo muestra la figura si tiene `image_url`; se quitó el hueco provisional. Si más adelante hay ilustraciones propias o con licencia, se rellenan `tutorial_steps.image_url` e `image_alt`.
-  - **Fotos de la autora** (01/11/2026): mockups de ovillos con la etiqueta de Buclees (uno rosa, una composición de 10 ovillos y una torre de tres sobre madera). Están pendientes de que las guarde en el proyecto, para el Algodón DK y el inicio. Si se hicieron con una plantilla de mockup, hay que revisar su licencia.
+  - **Faltan fotos** del Merino Worsted, los kits y los accesorios (la autora avisará). Pasan por `normalize.mjs`.
   - **Imágenes y patrones ajenos:** citar no basta para publicarlos en la web (el derecho de cita solo cubre fragmentos para comentarlos o analizarlos). Hay que usar contenido propio, con licencia libre (Unsplash o Pexels, citadas igualmente) o con permiso escrito. Se explicó a la autora el 01/11/2026.
   - **Sustituir la demo del conejo** por un patrón propio de la autora.
   - **Publicar la web** antes de la entrega (pospuesto el 01/11/2026, ~45-60 min): frontend en Vercel (`vercel.json` que reenvía `/api` al backend y sirve `index.html` en todas las rutas), backend Express en Render y PostgreSQL en Neon. No cargar el seed tal cual (contraseñas de prueba públicas en el repo). Los PDF en disco se pierden al reiniciar en Render gratis: limitación conocida.
-  - **Paso 5:** tienda y patrones, con el CRUD de admin, incluidas las partes y los pasos de los patrones y los tutoriales.
+  - **Perfil** (datos, contraseña y borrar cuenta con pedidos anónimos) y después el **editor privado de patrones**.
 
 ## Documentación del TFG
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).
 
 - **Guion de la memoria** (Claude Docs): https://claude.ai/artifact/4nDEHBnQmcQhCskQqcnzdD. Sigue la estructura de la normativa con material por apartado. Hay que actualizarlo al terminar cada bloque.
-- **Diagramas de referencia en el guion (01/11/2026), apartado 7:** E-R de las 13 tablas, casos de uso (CU01-CU17 enlazados con RF01-RF22) y clases de dominio, escritos en **Mermaid** para que la autora los pegue en draw.io (Organizar › Insertar › Avanzado › Mermaid) y los rehaga con su estilo. Al cambiar el esquema, hay que actualizarlos.
+- **Diagramas de referencia en el guion (01/11/2026, actualizados ese día con la tienda y el panel), apartado 7:** E-R de las 14 tablas, casos de uso (CU01-CU17 enlazados con RF01-RF22) y clases de dominio, escritos en **Mermaid** para que la autora los pegue en draw.io (Organizar › Insertar › Avanzado › Mermaid) y los rehaga con su estilo. Al cambiar el esquema, hay que actualizarlos.
+- **Guion actualizado el 01/11/2026** con la tienda, el pago y el panel: E-R de 14 tablas, clase `ProductVariant`, RF y CU marcados como hechos, 14 pruebas de caja negra nuevas, decisiones técnicas en el apartado 8 y dos fallos corregidos. La autora pidió "ponte con la memoria": se le recordó que el texto lo escribe ella (antiplagio) y se actualizó el material.
 - **La memoria la redacta la autora.** La normativa (punto 4) exige que sea original y de elaboración propia, y la pasa por un antiplagio. Claude aporta material, datos, diagramas de referencia y revisión, nunca el texto final.
 - **Puntos clave de la normativa:**
   - Memoria de 30-60 páginas, en Arial 11 con interlineado 1,5, entregada en Word y en PDF con la plantilla oficial.
