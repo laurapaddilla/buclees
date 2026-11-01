@@ -9,13 +9,13 @@ const DIFFICULTIES = ['principiante', 'intermedio', 'avanzado'];
 // db: pool o el cliente de una transacción.
 export async function loadSections(patternId, projectId = null, db = { query }) {
   const { rows } = await db.query(
-    `SELECT ps.id, ps.position, ps.title, ps.repeat_count, ps.yarn, ps.note,
+    `SELECT ps.id, ps.position, ps.title, ps.repeat_count, ps.yarn, ps.note, ps.chart_shape,
             (d.section_id IS NOT NULL) AS done,
             COALESCE(
               json_agg(json_build_object(
                 'id', s.id, 'position', s.position, 'title', s.title,
                 'row_from', s.row_from, 'row_to', s.row_to,
-                'stitches', s.stitches, 'instructions', s.instructions,
+                'stitches', s.stitches, 'instructions', s.instructions, 'chart', s.chart,
                 'done', g.step_id IS NOT NULL
               ) ORDER BY s.position) FILTER (WHERE s.id IS NOT NULL),
               '[]'

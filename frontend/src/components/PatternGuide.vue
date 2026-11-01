@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { BButton, BIcon, BTutorialStep } from '@/design-system/components/index.js';
+import PatternChart from '@/components/PatternChart.vue';
 import { setStepDone } from '@/services/projects.js';
 import { listTutorials } from '@/services/tutorials.js';
 import { lastRow, rowStepState, sectionLabel, stepLabel, stitchesUsed } from '@/utils/patterns.js';
@@ -162,6 +163,12 @@ onMounted(async () => {
 
       <p v-if="error" class="save-status is-error" role="alert">{{ error }}</p>
 
+      <!-- Esquema dibujado: se puede plegar para dejar sitio a los pasos en el móvil. -->
+      <details v-if="viewed.chart_shape" class="guide__chart" open>
+        <summary class="body-sm guide__chart-toggle">Esquema</summary>
+        <PatternChart :section="viewed" :count="viewingCurrent ? count : null" />
+      </details>
+
       <ol ref="listEl" class="guide__steps">
         <li
           v-for="step in viewed.steps"
@@ -314,6 +321,23 @@ onMounted(async () => {
 
 .guide__other p {
   margin: 0;
+}
+
+.guide__chart {
+  margin-bottom: var(--space-4);
+}
+
+.guide__chart-toggle {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide__chart-toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .guide__steps {

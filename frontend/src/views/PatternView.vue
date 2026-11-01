@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BBadge, BIcon, BTutorialStep } from '@/design-system/components/index.js';
+import PatternChart from '@/components/PatternChart.vue';
 import { getPattern } from '@/services/patterns.js';
 import { listTutorials } from '@/services/tutorials.js';
 import { DIFFICULTY } from '@/utils/labels.js';
@@ -122,6 +123,7 @@ watch(() => route.params.id, (id) => id && load(id), { immediate: true });
           >
             <h2 :id="`titulo-${sec.position}`" class="h2">{{ sectionLabel(sec) }}</h2>
             <p v-if="sec.yarn" class="body-sm pat__muted">{{ sec.yarn }}</p>
+            <PatternChart v-if="sec.chart_shape" :section="sec" class="pat__chart" />
             <ol class="pat__steps">
               <li v-for="step in sec.steps" :key="step.id">
                 <BTutorialStep :step="step.position" :title="stepLabel(step)" :stitches="step.stitches">
@@ -280,6 +282,10 @@ watch(() => route.params.id, (id) => id && load(id), { immediate: true });
   margin: var(--space-4) 0 0;
   padding: 0;
   list-style: none;
+}
+
+.pat__chart {
+  margin-top: var(--space-4);
 }
 
 .pat__steps :deep(.bc-step) {

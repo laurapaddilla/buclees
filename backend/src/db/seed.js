@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { pool } from './pool.js';
 import { tutorials } from './seed-tutorials.js';
 import { patterns } from './seed-patterns.js';
+import { applyCharts } from './seed-charts.js';
 
 // Coste de bcrypt: cuántas rondas de cifrado. 10 es el valor habitual (equilibrio seguridad/velocidad).
 const SALT_ROUNDS = 10;
@@ -220,13 +221,17 @@ async function seed() {
       [order.id],
     );
 
+    // Esquemas dibujados de los patrones (archivo aparte).
+    const charts = await applyCharts(client);
+    if (charts.missing.length) throw new Error(`Esquemas sin parte o paso: ${charts.missing.join(', ')}`);
+
     await client.query('COMMIT');
 
     console.log('Seed completado:');
     console.log(`  admin:    ${admin.email} (contraseña de .env)`);
     for (const u of testUsers) console.log(`  usuario:  ${u.email} / ${TEST_PASSWORD}`);
     console.log(`  ${products.length} productos, ${patterns.length} patrones, ${anaProjects.length} proyectos, 1 pedido`);
-    console.log(`  ${tutorials.length} tutoriales de puntos básicos`);
+    console.log(`  ${tutorials.length} tutoriales de puntos básicos, ${charts.steps} pasos con esquema`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
