@@ -37,7 +37,7 @@ export const useCartStore = defineStore('cart', () => {
         variantName: variant?.name ?? null,
         colorHex: variant?.color_hex ?? null,
         category: product.category,
-        imageUrl: product.image_url ?? null,
+        imageUrl: variant?.image_url ?? product.image_url ?? null,
         price: product.price,
         stock,
         quantity: 0,
@@ -78,7 +78,7 @@ export const useCartStore = defineStore('cart', () => {
       }
       line.title = product.title;
       line.price = product.price;
-      line.imageUrl = product.image_url ?? null;
+      line.imageUrl = variant?.image_url ?? product.image_url ?? null;
       line.stock = variant ? variant.stock : product.stock;
       if (line.stock === 0) {
         remove(line.key);

@@ -12,7 +12,11 @@ const props = defineProps({
 
 const colors = computed(() => props.product.variants.filter((v) => v.color_hex));
 const sizes = computed(() => props.product.variants.filter((v) => !v.color_hex).map((v) => v.name));
-// El dibujo usa el primer color que queda en stock.
+// La tarjeta muestra la primera foto de un color con stock; si no hay fotos, la del producto
+// o, si tampoco, el ovillo dibujado con el primer color que queda en stock.
+const photo = computed(
+  () => props.product.variants.find((v) => v.image_url && v.stock > 0)?.image_url ?? props.product.image_url,
+);
 const artColor = computed(() => (colors.value.find((v) => v.stock > 0) ?? colors.value[0])?.color_hex ?? null);
 const soldOut = computed(() => props.product.stock === 0);
 // El manual de marca pide un máximo de 5 muestras; el resto se cuenta.
@@ -21,8 +25,8 @@ const MAX_SWATCHES = 5;
 
 <template>
   <RouterLink :to="`/tienda/${product.id}`" class="bc-card product">
-    <div class="product__media">
-      <img v-if="product.image_url" :src="product.image_url" alt="" class="product__img" />
+    <div :class="['product__media', { 'has-photo': photo }]">
+      <img v-if="photo" :src="photo" alt="" loading="lazy" class="product__img" />
       <ProductArt
         v-else
         :category="product.category"
@@ -56,9 +60,11 @@ const MAX_SWATCHES = 5;
 </template>
 
 <style scoped>
+/* .bc-card tiene max-width: 300px; en la rejilla de la tienda la tarjeta ocupa su celda (como en Patrones). */
 .product {
   display: flex;
   flex-direction: column;
+  max-width: none;
   height: 100%;
   color: inherit;
   text-decoration: none;
@@ -72,6 +78,11 @@ const MAX_SWATCHES = 5;
 .product__media {
   padding: var(--space-4) var(--space-8) 0;
   background: var(--surface-200);
+}
+
+/* Con foto: sin márgenes, recortada al mismo alto que el dibujo (200 × 160 = 5:4). */
+.product__media.has-photo {
+  padding: 0;
 }
 
 .product__img {

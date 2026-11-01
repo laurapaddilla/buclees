@@ -14,7 +14,7 @@ const PRODUCT_SELECT = `
   FROM products p
   LEFT JOIN patterns pa ON pa.id = p.pattern_id AND pa.is_active
   LEFT JOIN LATERAL (
-    SELECT json_agg(json_build_object('id', id, 'name', name, 'color_hex', color_hex, 'stock', stock)
+    SELECT json_agg(json_build_object('id', id, 'name', name, 'color_hex', color_hex, 'stock', stock, 'image_url', image_url)
                     ORDER BY position) AS variants,
            SUM(stock)::int AS stock
     FROM product_variants

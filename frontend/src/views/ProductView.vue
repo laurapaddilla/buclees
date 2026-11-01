@@ -21,6 +21,8 @@ const quantity = ref(1);
 const added = ref('');
 
 const variant = computed(() => product.value?.variants.find((v) => v.id === variantId.value) ?? null);
+// Foto del color elegido; si no tiene, la del producto; si tampoco, el ovillo dibujado.
+const photo = computed(() => variant.value?.image_url ?? product.value?.image_url ?? null);
 const hasVariants = computed(() => product.value?.variants.length > 0);
 const isColor = computed(() => product.value?.variants.some((v) => v.color_hex));
 // Stock de lo que se va a comprar: la variante elegida o el producto sin variantes.
@@ -85,8 +87,8 @@ function addToCart() {
     </div>
 
     <div v-else class="item">
-      <div class="item__media">
-        <img v-if="product.image_url" :src="product.image_url" :alt="product.title" class="item__img" />
+      <div :class="['item__media', { 'has-photo': photo }]">
+        <img v-if="photo" :src="photo" :alt="variant ? `${product.title}, ${variant.name}` : product.title" class="item__img" />
         <ProductArt
           v-else
           :category="product.category"
@@ -205,10 +207,23 @@ function addToCart() {
   }
 }
 
+/* Con foto: la foto ocupa la caja (vertical, como las de la autora), sin el fondo crema alrededor. */
+.item__media.has-photo {
+  padding: 0;
+  overflow: hidden;
+}
+
 .item__img {
   display: block;
   width: 100%;
-  border-radius: var(--radius-md);
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+@media (max-width: 859px) {
+  .item__img {
+    aspect-ratio: 1;
+  }
 }
 
 .item__info {

@@ -8,7 +8,7 @@ const ORDER_COLUMNS = `o.id, o.status, o.total, o.shipping_cost, o.created_at,
 // Líneas de un pedido con lo que se necesita para mostrarlas (el nombre de la variante y el precio
 // son copias guardadas al comprar; el color se lee de la variante si aún existe).
 const ITEMS_SQL = `
-  SELECT oi.id, oi.product_id, p.title, p.category, p.image_url, oi.variant_id, oi.variant_name,
+  SELECT oi.id, oi.product_id, p.title, p.category, COALESCE(v.image_url, p.image_url) AS image_url, oi.variant_id, oi.variant_name,
          v.color_hex, oi.quantity, oi.unit_price
   FROM order_items oi
   JOIN products p ON p.id = oi.product_id
