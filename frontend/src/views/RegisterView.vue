@@ -1,10 +1,12 @@
 <script setup>
 import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 import { BButton, BInput } from '@/design-system/components/index.js';
+import { safeRedirect } from '@/utils/redirect.js';
 
 const auth = useAuthStore();
+const route = useRoute();
 const router = useRouter();
 
 const form = reactive({ name: '', email: '', password: '' });
@@ -18,7 +20,8 @@ async function submit() {
   loading.value = true;
   try {
     await auth.register(form);
-    router.push('/taller');
+    // Vuelve a la página que pedía la cuenta (por ejemplo, el pago), o al taller.
+    router.push(safeRedirect(route.query.redirect));
   } catch (err) {
     fieldErrors.value = err.fieldErrors ?? {};
     formError.value = err.details?.length ? '' : err.message;
@@ -50,7 +53,7 @@ async function submit() {
       </form>
 
       <p class="body-sm form-card__foot">
-        ¿Ya tienes cuenta? <RouterLink to="/entrar">Entra</RouterLink>
+        ¿Ya tienes cuenta? <RouterLink :to="{ path: '/entrar', query: route.query }">Entra</RouterLink>
       </p>
     </div>
   </section>

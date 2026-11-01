@@ -16,3 +16,12 @@ export const CATEGORIES = [
   { value: 'accesorio', plural: 'Accesorios', one: 'Accesorio' },
 ];
 export const categoryOne = (value) => CATEGORIES.find((c) => c.value === value)?.one ?? value;
+
+// Estados de un pedido (el pago es simulado: un pedido nuevo nace «pagado»).
+export const ORDER_STATUS = {
+  pendiente: { label: 'Pendiente', tone: 'amarillo' },
+  pagado: { label: 'Pagado', tone: 'oliva' },
+  enviado: { label: 'Enviado', tone: 'rosa' },
+  entregado: { label: 'Entregado', tone: 'oliva' },
+  cancelado: { label: 'Cancelado', tone: undefined },
+};

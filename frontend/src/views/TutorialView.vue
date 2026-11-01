@@ -52,12 +52,9 @@ watch(() => route.params.slug, (slug) => slug && load(slug), { immediate: true }
       <ol class="tut__steps">
         <li v-for="step in tutorial.steps" :key="step.position">
           <BTutorialStep :step="step.position" :title="step.title">
-            <figure class="tut__figure">
-              <!-- Ilustración o GIF del paso. Mientras no exista, un hueco provisional con la trama del sistema de diseño. -->
-              <img v-if="step.image_url" :src="step.image_url" :alt="step.image_alt" loading="lazy" class="tut__img" />
-              <div v-else class="bc-pattern__media is-placeholder tut__placeholder">
-                <span class="caption">Ilustración pendiente</span>
-              </div>
+            <!-- Ilustración o GIF del paso, solo si existe (decisión de la autora, 01/11/2026: por ahora, sin imágenes). -->
+            <figure v-if="step.image_url" class="tut__figure">
+              <img :src="step.image_url" :alt="step.image_alt" loading="lazy" class="tut__img" />
             </figure>
             <p>{{ step.instructions }}</p>
           </BTutorialStep>
@@ -132,29 +129,13 @@ watch(() => route.params.slug, (slug) => slug && load(slug), { immediate: true }
   margin: var(--space-1) 0 var(--space-3);
 }
 
-.tut__img,
-.tut__placeholder {
+.tut__img {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-md);
-}
-
-.tut__img {
   object-fit: cover;
   background: var(--surface-raised);
-}
-
-.tut__placeholder {
-  display: grid;
-  place-items: center;
-}
-
-.tut__placeholder span {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--surface-raised);
-  color: var(--ink-muted);
 }
 
 .tut__next {

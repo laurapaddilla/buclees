@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 import { BButton, BInput } from '@/design-system/components/index.js';
+import { safeRedirect } from '@/utils/redirect.js';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -20,7 +21,7 @@ async function submit() {
   try {
     await auth.login(form);
     // Vuelve a la página que pedía login, o al taller.
-    router.push(route.query.redirect || '/taller');
+    router.push(safeRedirect(route.query.redirect));
   } catch (err) {
     fieldErrors.value = err.fieldErrors ?? {};
     formError.value = err.details?.length ? '' : err.message;
@@ -50,7 +51,7 @@ async function submit() {
       </form>
 
       <p class="body-sm form-card__foot">
-        ¿Aún no tienes cuenta? <RouterLink to="/registro">Créala gratis</RouterLink>
+        ¿Aún no tienes cuenta? <RouterLink :to="{ path: '/registro', query: route.query }">Créala gratis</RouterLink>
       </p>
     </div>
   </section>

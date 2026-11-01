@@ -72,7 +72,7 @@ Tipos: precios y totales como `NUMERIC(10,2)`, nunca FLOAT. `created_at TIMESTAM
 - `/api/projects` (todo con `authRequired`): `GET /`, `POST /` (acepta `start_row` y `target_rows`; crea proyecto y contador en una transacción), `GET /:id`, `PATCH /:id`, `DELETE /:id`. Hecho.
 - `/api/projects/:id/counter`: `GET`, `POST /increment`, `POST /decrement`, `POST /reset` (a 0), `PATCH` (`row_count` para elegir vuelta, `target_rows`, `notes`). Responden `{ counter: { row_count, target_rows, notes } }`. Hecho.
 - `PUT /api/projects/:id/steps/:stepId` `{ done }` marca o desmarca un paso. `PUT /api/projects/:id/pdf` sube el PDF como binario (`Content-Type: application/pdf`, nombre en la cabecera `X-File-Name`; con `express.raw`, sin multer); `GET` lo descarga (con token, `Cache-Control: private, no-store`); `DELETE` lo quita. Hecho.
-- `/api/orders`: crear pedido y ver historial del usuario.
+- `/api/orders` (todo con `authRequired`, filtrado por `req.user.id`): `GET /` (historial con `item_count`), `GET /last-address`, `GET /:id` (con líneas; si es de otra usuaria, 404) y `POST /` `{ items: [{ product_id, variant_id, quantity }], shipping: { name, address, city, postal_code, phone } }`. Devuelve 409 si un producto está retirado o agotado o falta stock. Hecho (01/11/2026).
 
 ## Reglas técnicas obligatorias
 - **Propietario:** en cualquier ruta de `/api/projects/:id` comprobar que el proyecto pertenece a `req.user.id`.
@@ -207,9 +207,17 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - El resumen se calcula en **céntimos enteros** (`utils/shipping.js` del frontend, con las mismas reglas que el backend). Es solo informativo: cobra el servidor.
   - Cabecera: icono de bolsa con el número de artículos, siempre visible (en el móvil, a la derecha del logo).
   - `Intl` pone un espacio de no separación (U+00A0) antes del €: las pruebas tienen que normalizarlo.
-  - Siguiente: pago y pedidos (bloque 4) y el panel.
+- **Tienda, bloque 4 hecho (01/11/2026): pago y pedidos.**
+  - `order.service.createOrder` crea el pedido en una sola transacción: bloquea cada fila de stock con `FOR UPDATE`, siempre en el mismo orden (producto y variante) para evitar bloqueos cruzados; lee el precio de la BD; inserta las líneas; descuenta el stock y calcula el envío y el total en SQL. El pedido nace `pagado` (pago simulado). Probado: 10 compras simultáneas con 5 unidades → 5 bien, 5 con 409 y stock 0. Un fallo a mitad no deja nada a medias.
+  - **La tarjeta de prueba no se envía al servidor:** solo se valida en el navegador (`utils/card.js`: algoritmo de Luhn, caducidad MM/AA y CVC). Tarjeta de prueba: 4242 4242 4242 4242.
+  - `/pagar` (`CheckoutView`, privada): propone la dirección del último pedido, sincroniza el carrito al abrir y, si hay un 409, muestra el mensaje y vuelve a sincronizar. `/pedidos` (`OrdersView`) y `/pedidos/:id` (`OrderView`, con "¡Gracias por tu pedido!" si llega con `?nuevo=1`). El perfil enlaza a Mis pedidos.
+  - **Login y registro respetan `?redirect=`** (validado con `utils/redirect.js`: solo rutas internas, para que no sirva para mandar a otra web) y lo conservan al pasar de uno a otro.
+  - **Corregido en `BInput`** (en `design/` y en la copia del frontend): el contador de ids dentro de `<script setup>` se reiniciaba en cada campo y todos tenían `id="bc-in-1"`, así que las etiquetas y los errores apuntaban al primer campo. Ahora se usa `useId()`.
+  - Siguiente: el panel de admin (productos con variantes y stock, pedidos con cambio de estado e imágenes subidas) y el perfil (datos, contraseña, borrar cuenta).
 - **Pendiente:**
-  - **Ilustraciones o GIF propios de los tutoriales**, en el estilo de la imagen de referencia de la autora (ilustración numerada de las manos tejiendo cadenetas). Deben ser propias o con licencia y con su fuente citada. Se rellenan en `tutorial_steps.image_url` e `image_alt`.
+  - **Tutoriales sin imagen por ahora** (decisión de la autora, 01/11/2026: "es mucho lío"). El paso solo muestra la figura si tiene `image_url`; se quitó el hueco provisional. Si más adelante hay ilustraciones propias o con licencia, se rellenan `tutorial_steps.image_url` e `image_alt`.
+  - **Fotos de la autora** (01/11/2026): mockups de ovillos con la etiqueta de Buclees (uno rosa, una composición de 10 ovillos y una torre de tres sobre madera). Están pendientes de que las guarde en el proyecto, para el Algodón DK y el inicio. Si se hicieron con una plantilla de mockup, hay que revisar su licencia.
+  - **Imágenes y patrones ajenos:** citar no basta para publicarlos en la web (el derecho de cita solo cubre fragmentos para comentarlos o analizarlos). Hay que usar contenido propio, con licencia libre (Unsplash o Pexels, citadas igualmente) o con permiso escrito. Se explicó a la autora el 01/11/2026.
   - **Sustituir la demo del conejo** por un patrón propio de la autora.
   - **Publicar la web** antes de la entrega (pospuesto el 01/11/2026, ~45-60 min): frontend en Vercel (`vercel.json` que reenvía `/api` al backend y sirve `index.html` en todas las rutas), backend Express en Render y PostgreSQL en Neon. No cargar el seed tal cual (contraseñas de prueba públicas en el repo). Los PDF en disco se pierden al reiniciar en Render gratis: limitación conocida.
   - **Paso 5:** tienda y patrones, con el CRUD de admin, incluidas las partes y los pasos de los patrones y los tutoriales.

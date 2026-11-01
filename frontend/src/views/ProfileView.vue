@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 import { BButton } from '@/design-system/components/index.js';
 
-// Perfil (básico). Con la tienda llegarán "Mis pedidos", cambiar los datos y la contraseña y borrar la cuenta.
+// Perfil (básico): datos, enlace a "Mis pedidos" y Salir. Cambiar los datos y la contraseña y borrar la cuenta llegarán después.
 const auth = useAuthStore();
 const router = useRouter();
 
@@ -22,7 +22,11 @@ function logout() {
         <p class="h3 profile__name">{{ auth.user?.name }}</p>
         <p class="body-sm profile__email">{{ auth.user?.email }}</p>
       </div>
-      <p class="body-sm profile__soon">Muy pronto podrás ver aquí tus pedidos y cambiar tus datos.</p>
+      <RouterLink to="/pedidos" class="profile__link">
+        <span class="body">Mis pedidos</span>
+        <span aria-hidden="true">→</span>
+      </RouterLink>
+      <p class="body-sm profile__soon">Muy pronto podrás cambiar aquí tus datos y tu contraseña.</p>
       <BButton variant="secondary" class="profile__logout" @click="logout">Salir</BButton>
     </template>
 
@@ -52,6 +56,30 @@ function logout() {
 
 .profile__email {
   color: var(--ink-muted);
+}
+
+.profile__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  margin-top: var(--space-3);
+  padding: 0 var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.profile__link:hover {
+  border-color: var(--line-strong);
+}
+
+.profile__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .profile__soon {

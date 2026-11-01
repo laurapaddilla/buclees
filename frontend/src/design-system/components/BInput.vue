@@ -1,7 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 defineOptions({ inheritAttrs: false })
-let uid = 0
 const props = defineProps({
   modelValue: { type: [String, Number], default: undefined },
   label: { type: String, default: '' },
@@ -11,7 +10,8 @@ const props = defineProps({
   id: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue'])
-const autoId = `bc-in-${++uid}`
+// useId: un id único por campo (un contador dentro de <script setup> se reiniciaba en cada campo y todos acababan con bc-in-1).
+const autoId = `bc-in-${useId()}`
 const inputId = computed(() => props.id || autoId)
 const msgId = computed(() => `${inputId.value}-msg`)
 const msg = computed(() => (props.error ? `Error: ${props.error}` : props.hint))

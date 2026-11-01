@@ -11,6 +11,10 @@ const routes = [
   { path: '/tienda', name: 'shop', component: () => import('@/views/ShopView.vue') },
   { path: '/tienda/:id(\\d+)', name: 'product', component: () => import('@/views/ProductView.vue') },
   { path: '/carrito', name: 'cart', component: () => import('@/views/CartView.vue') },
+  // Pagar pide sesión: el guard lleva al login y vuelve aquí; el carrito sigue en el navegador.
+  { path: '/pagar', name: 'checkout', component: () => import('@/views/CheckoutView.vue'), meta: { requiresAuth: true } },
+  { path: '/pedidos', name: 'orders', component: () => import('@/views/OrdersView.vue'), meta: { requiresAuth: true } },
+  { path: '/pedidos/:id(\\d+)', name: 'order', component: () => import('@/views/OrderView.vue'), meta: { requiresAuth: true } },
   { path: '/patrones', name: 'patterns', component: () => import('@/views/PatternsView.vue') },
   { path: '/patrones/:id(\\d+)', name: 'pattern', component: () => import('@/views/PatternView.vue') },
   { path: '/tutoriales', name: 'tutorials', component: () => import('@/views/TutorialsView.vue') },
