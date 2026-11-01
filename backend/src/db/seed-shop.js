@@ -25,6 +25,9 @@ export const variants = {
 // Productos renombrados después de crearse (para actualizar bases ya sembradas).
 const renamed = { 'Ganchillo ergonómico 4 mm': 'Ganchillo ergonómico' };
 
+// Metraje corregido después de crearse: el que pone la etiqueta de la foto de la autora.
+const meters = { 'Algodón Fingering': '212 m / 100 g' };
+
 // Crea las variantes que falten. De las que ya existen, si el seed trae foto, pone la foto y su color
 // (sacado de la foto, para que la muestra coincida). Nunca toca el stock.
 // Las nuevas van al final (posición siguiente), para no chocar con las posiciones de una base ya sembrada.
@@ -33,6 +36,9 @@ const renamed = { 'Ganchillo ergonómico 4 mm': 'Ganchillo ergonómico' };
 export async function applyVariants(db) {
   for (const [from, to] of Object.entries(renamed)) {
     await db.query('UPDATE products SET title = $2 WHERE title = $1', [from, to]);
+  }
+  for (const [title, value] of Object.entries(meters)) {
+    await db.query('UPDATE products SET meters = $2 WHERE title = $1', [title, value]);
   }
   let created = 0;
   const missing = [];

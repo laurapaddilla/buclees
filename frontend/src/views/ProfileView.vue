@@ -26,6 +26,11 @@ function logout() {
         <span class="body">Mis pedidos</span>
         <span aria-hidden="true">→</span>
       </RouterLink>
+      <!-- Solo la admin: en el móvil no hay cabecera con enlaces, así que el panel se abre desde aquí. -->
+      <RouterLink v-if="auth.isAdmin" to="/admin" class="profile__link">
+        <span class="body">Panel de admin</span>
+        <span aria-hidden="true">→</span>
+      </RouterLink>
       <p class="body-sm profile__soon">Muy pronto podrás cambiar aquí tus datos y tu contraseña.</p>
       <BButton variant="secondary" class="profile__logout" @click="logout">Salir</BButton>
     </template>

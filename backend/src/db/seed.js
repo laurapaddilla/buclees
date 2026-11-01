@@ -31,7 +31,7 @@ const products = [
     fiber: 'Lana merino 100 %', yarn_weight: 'Worsted', meters: '180 m / 100 g', hook_size: '5 mm' },
   { title: 'Algodón Fingering', category: 'ovillo', price: 5.5, stock: 30,
     description: 'Hilo fino para calados, chales y detalles delicados.',
-    fiber: 'Algodón 100 %', yarn_weight: 'Fingering', meters: '400 m / 100 g', hook_size: '2,5–3 mm' },
+    fiber: 'Algodón 100 %', yarn_weight: 'Fingering', meters: '212 m / 100 g', hook_size: '2,5–3 mm' },
   { title: 'Chenilla Bulky', category: 'ovillo', price: 6.75, stock: 15,
     description: 'Chenilla gruesa y aterciopelada: mantas y peluches que se tejen rápido.',
     fiber: 'Poliéster 100 %', yarn_weight: 'Bulky', meters: '120 m / 100 g', hook_size: '6–7 mm' },

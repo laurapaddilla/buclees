@@ -139,3 +139,76 @@ export async function lastAddress(userId) {
   );
   return rows[0] ?? null;
 }
+
+// ---------- Panel de admin ----------
+
+// Cambios de estado permitidos. Entregado y cancelado son finales: un pedido cancelado ya devolvió
+// su stock y no puede volver atrás.
+export const NEXT_STATUS = {
+  pendiente: ['pagado', 'cancelado'],
+  pagado: ['enviado', 'cancelado'],
+  enviado: ['entregado'],
+  entregado: [],
+  cancelado: [],
+};
+
+// Todos los pedidos (filtro opcional por estado), con quién los hizo.
+export async function adminListOrders({ status } = {}) {
+  const { rows } = await query(
+    `SELECT ${ORDER_COLUMNS}, u.name AS user_name, u.email AS user_email,
+            (SELECT SUM(quantity)::int FROM order_items WHERE order_id = o.id) AS item_count
+     FROM orders o
+     LEFT JOIN users u ON u.id = o.user_id
+     WHERE ($1::text IS NULL OR o.status = $1)
+     ORDER BY o.created_at DESC, o.id DESC`,
+    [status ?? null],
+  );
+  return rows;
+}
+
+export async function adminGetOrder(id) {
+  const { rows } = await query(
+    `SELECT ${ORDER_COLUMNS}, u.name AS user_name, u.email AS user_email
+     FROM orders o LEFT JOIN users u ON u.id = o.user_id
+     WHERE o.id = $1`,
+    [id],
+  );
+  if (rows.length === 0) throw new HttpError(404, 'Pedido no encontrado');
+  const { rows: items } = await query(ITEMS_SQL, [id]);
+  return { ...rows[0], items, next_statuses: NEXT_STATUS[rows[0].status] };
+}
+
+// Cambia el estado en una transacción. Al cancelar, devuelve el stock de cada línea
+// (a su variante, o al producto si no tiene). FOR UPDATE: dos cambios a la vez no cancelan dos veces.
+export async function changeOrderStatus(id, status) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query('SELECT status FROM orders WHERE id = $1 FOR UPDATE', [id]);
+    if (rows.length === 0) throw new HttpError(404, 'Pedido no encontrado');
+    const current = rows[0].status;
+    if (!NEXT_STATUS[current].includes(status)) {
+      throw new HttpError(409, `Un pedido ${current} no puede pasar a ${status}`);
+    }
+    if (status === 'cancelado') {
+      await client.query(
+        `UPDATE product_variants v SET stock = v.stock + oi.quantity
+         FROM order_items oi WHERE oi.order_id = $1 AND oi.variant_id = v.id`,
+        [id],
+      );
+      await client.query(
+        `UPDATE products p SET stock = p.stock + oi.quantity
+         FROM order_items oi WHERE oi.order_id = $1 AND oi.variant_id IS NULL AND oi.product_id = p.id`,
+        [id],
+      );
+    }
+    await client.query('UPDATE orders SET status = $2 WHERE id = $1', [id, status]);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+  return adminGetOrder(id);
+}

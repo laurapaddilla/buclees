@@ -2,15 +2,13 @@
 import { onMounted, ref } from 'vue';
 import { BBadge } from '@/design-system/components/index.js';
 import { listOrders } from '@/services/orders.js';
-import { euros } from '@/utils/format.js';
+import { euros, orderDate } from '@/utils/format.js';
 import { ORDER_STATUS } from '@/utils/labels.js';
 
 // Mis pedidos: historial de la usuaria, del más reciente al más antiguo.
 const orders = ref([]);
 const loading = ref(true);
 const error = ref('');
-
-const dateFormat = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
 async function load() {
   loading.value = true;
@@ -48,7 +46,7 @@ onMounted(load);
           <span class="order__main">
             <span class="body order__num">Pedido n.º {{ o.id }}</span>
             <span class="caption order__date">
-              {{ dateFormat.format(new Date(o.created_at)) }} · {{ o.item_count }} {{ o.item_count === 1 ? 'artículo' : 'artículos' }}
+              {{ orderDate(o.created_at) }} · {{ o.item_count }} {{ o.item_count === 1 ? 'artículo' : 'artículos' }}
             </span>
           </span>
           <BBadge :tone="ORDER_STATUS[o.status].tone">{{ ORDER_STATUS[o.status].label }}</BBadge>

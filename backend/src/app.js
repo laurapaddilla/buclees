@@ -7,6 +7,7 @@ import projectRoutes from './routes/project.routes.js';
 import patternRoutes from './routes/pattern.routes.js';
 import productRoutes from './routes/product.routes.js';
 import orderRoutes from './routes/order.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import tutorialRoutes from './routes/tutorial.routes.js';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/patterns', patternRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/tutorials', tutorialRoutes);
 
 // Rutas no encontradas.

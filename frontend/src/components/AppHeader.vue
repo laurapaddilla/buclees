@@ -22,6 +22,7 @@ const inTutorials = inSection('/tutoriales');
 const inTaller = inSection('/taller');
 const inProfile = inSection('/perfil');
 const inCart = inSection('/carrito');
+const inAdmin = inSection('/admin');
 
 const cartLabel = computed(() => (cart.count === 1 ? 'Carrito, 1 artículo' : `Carrito, ${cart.count} artículos`));
 </script>
@@ -40,6 +41,7 @@ const cartLabel = computed(() => (cart.count === 1 ? 'Carrito, 1 artículo' : `C
         <RouterLink to="/patrones" :class="['header__link', { 'is-current': inPatterns }]">Patrones</RouterLink>
         <RouterLink to="/tutoriales" :class="['header__link', { 'is-current': inTutorials }]">Tutoriales</RouterLink>
         <RouterLink to="/taller" :class="['header__link', { 'is-current': inTaller }]">Taller</RouterLink>
+        <RouterLink v-if="auth.isAdmin" to="/admin" :class="['header__link', { 'is-current': inAdmin }]">Panel</RouterLink>
         <RouterLink v-if="auth.isAuthenticated" to="/perfil" :class="['header__link', { 'is-current': inProfile }]">Perfil</RouterLink>
         <RouterLink v-else to="/entrar" class="header__link header__link--cta">Entrar</RouterLink>
       </nav>

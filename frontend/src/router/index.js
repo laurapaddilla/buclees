@@ -15,6 +15,10 @@ const routes = [
   { path: '/pagar', name: 'checkout', component: () => import('@/views/CheckoutView.vue'), meta: { requiresAuth: true } },
   { path: '/pedidos', name: 'orders', component: () => import('@/views/OrdersView.vue'), meta: { requiresAuth: true } },
   { path: '/pedidos/:id(\\d+)', name: 'order', component: () => import('@/views/OrderView.vue'), meta: { requiresAuth: true } },
+  // Panel de admin: sesión y rol admin (el backend lo vuelve a comprobar en cada petición).
+  { path: '/admin', redirect: '/admin/pedidos' },
+  { path: '/admin/pedidos', name: 'admin-orders', component: () => import('@/views/AdminOrdersView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/pedidos/:id(\\d+)', name: 'admin-order', component: () => import('@/views/AdminOrderView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/patrones', name: 'patterns', component: () => import('@/views/PatternsView.vue') },
   { path: '/patrones/:id(\\d+)', name: 'pattern', component: () => import('@/views/PatternView.vue') },
   { path: '/tutoriales', name: 'tutorials', component: () => import('@/views/TutorialsView.vue') },
@@ -43,6 +47,10 @@ router.beforeEach(async (to) => {
   // Página privada sin sesión -> al login, recordando adónde iba.
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } };
+  }
+  // Panel de admin sin ser admin -> la página 404 (con la misma URL), sin revelar que el panel existe.
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return { name: 'not-found', params: { pathMatch: to.path.slice(1).split('/') }, query: to.query, hash: to.hash };
   }
   // Login o registro con sesión ya iniciada -> al taller.
   if (to.meta.guestOnly && auth.isAuthenticated) {
