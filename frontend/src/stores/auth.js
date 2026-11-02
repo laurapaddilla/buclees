@@ -45,5 +45,20 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, token, isAuthenticated, isAdmin, login, register, logout, loadUser };
+  // ---------- Perfil ----------
+  async function updateProfile(data) {
+    user.value = (await api('/auth/me', { method: 'PATCH', body: data })).user;
+  }
+
+  async function changePassword(data) {
+    await api('/auth/me/password', { method: 'PUT', body: data });
+  }
+
+  // Borra la cuenta en el servidor y cierra la sesión en este dispositivo.
+  async function deleteAccount(password) {
+    await api('/auth/me', { method: 'DELETE', body: { password } });
+    logout();
+  }
+
+  return { user, token, isAuthenticated, isAdmin, login, register, logout, loadUser, updateProfile, changePassword, deleteAccount };
 });

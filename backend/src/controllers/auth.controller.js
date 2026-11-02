@@ -17,3 +17,18 @@ export async function me(req, res) {
   const user = await authService.getUserById(req.user.id);
   res.json({ user });
 }
+
+export async function updateMe(req, res) {
+  const user = await authService.updateMe(req.user.id, req.body);
+  res.json({ user });
+}
+
+export async function changePassword(req, res) {
+  await authService.changePassword(req.user.id, req.body);
+  res.status(204).end();
+}
+
+export async function deleteMe(req, res) {
+  await authService.deleteMe(req.user.id, req.body);
+  res.status(204).end();
+}

@@ -24,7 +24,7 @@ La funcionalidad estrella es la vista de trabajo del proyecto: contador de filas
 - Frontend: Vue 3 + Vite + Vue Router + Pinia.
 - Estructura backend: `routes/ → controllers/ → services/ → db/`, más `middleware/` y `migrations/`.
 
-## Base de datos (14 tablas, scripts SQL de migración 001-014)
+## Base de datos (14 tablas, scripts SQL de migración 001-015)
 
 Especificación original (6 tablas); el 25/10/2026 se añadió `patterns` (ver "Esquema implementado").
 1. `users`: id, nombre, email (único), contraseña cifrada, rol (`user` / `admin`, con CHECK).
@@ -233,14 +233,21 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
   - `buildSet` se movió a `utils/buildSet.js` (lo usan proyectos y productos).
   - Frontend: `/admin/productos` (lista con los retirados y el stock real), `/admin/productos/nuevo` y `/admin/productos/:id` (`AdminProductView`: datos, foto del producto, variantes editables una a una con color, stock, "a la venta" y su foto, y "añadir color o tamaño"). `AdminImageField` comprueba tipo, tamaño y texto alternativo antes de subir. `AdminNav` con las pestañas Pedidos · Productos.
   - Pruebas: 29 de la API (texto disfrazado de PNG → 400; `../.env` → 404; archivo anterior borrado) y 14 en el navegador.
-  - Siguiente: el perfil (datos, contraseña pidiendo la actual y borrar cuenta, con los pedidos conservados de forma anónima).
+- **Perfil hecho (02/11/2026).**
+  - Migración 015: `orders.user_id` admite nulo y pasa a `ON DELETE SET NULL` (antes RESTRICT).
+  - API (`/api/auth`, con sesión): `PATCH /me` (nombre y/o email; email repetido → 409 en el campo), `PUT /me/password` `{ current_password, new_password }` (la actual mal → 400 en su campo; la nueva tiene que ser distinta) y `DELETE /me` `{ password }`.
+  - **Borrar la cuenta**, en una transacción: comprueba la contraseña; la administradora no puede (403); con pedidos pendientes, pagados o enviados no se puede (409: «podrás borrarla cuando se hayan entregado», decisión de Claude para poder enviarlos); borra nombre, dirección y teléfono de sus pedidos (quedan ciudad, código postal, importes y líneas) y borra la usuaria (sus proyectos en cascada). Los PDF de sus proyectos se borran del disco después del COMMIT.
+  - Limitación conocida: los tokens son JWT sin estado; cambiar la contraseña no cierra las sesiones de otros dispositivos hasta que caduquen (7 días).
+  - Frontend: `ProfileView` con tres `<details>` (Cambiar mis datos, Cambiar la contraseña con «repite la nueva» comprobado en el navegador, Borrar mi cuenta con contraseña y confirmación; oculto para la admin). `auth.updateProfile`, `changePassword` y `deleteAccount` en el almacén.
+  - Pruebas: 25 de la API y 12 en el navegador.
+  - Siguiente: el editor privado de patrones.
 - **Pendiente:**
   - **Tutoriales sin imagen por ahora** (decisión de la autora, 01/11/2026: "es mucho lío"). El paso solo muestra la figura si tiene `image_url`; se quitó el hueco provisional. Si más adelante hay ilustraciones propias o con licencia, se rellenan `tutorial_steps.image_url` e `image_alt`.
   - **Faltan fotos** del Merino Worsted, los kits y los accesorios (la autora avisará). Pasan por `normalize.mjs`.
   - **Imágenes y patrones ajenos:** citar no basta para publicarlos en la web (el derecho de cita solo cubre fragmentos para comentarlos o analizarlos). Hay que usar contenido propio, con licencia libre (Unsplash o Pexels, citadas igualmente) o con permiso escrito. Se explicó a la autora el 01/11/2026.
   - **Sustituir la demo del conejo** por un patrón propio de la autora.
   - **Publicar la web** antes de la entrega (pospuesto el 01/11/2026, ~45-60 min): frontend en Vercel (`vercel.json` que reenvía `/api` al backend y sirve `index.html` en todas las rutas), backend Express en Render y PostgreSQL en Neon. No cargar el seed tal cual (contraseñas de prueba públicas en el repo). Los PDF en disco se pierden al reiniciar en Render gratis: limitación conocida.
-  - **Perfil** (datos, contraseña y borrar cuenta con pedidos anónimos) y después el **editor privado de patrones**.
+  - **Editor privado de patrones.**
 
 ## Documentación del TFG
 La normativa de proyectos del ciclo está en `docs/`. Consúltala para ajustarte a los requisitos de entrega y evaluación, y ayúdame a ir recopilando material para la memoria (decisiones técnicas, diagramas, capturas).
