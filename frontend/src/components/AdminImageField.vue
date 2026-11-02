@@ -70,7 +70,7 @@ function upload() {
     </div>
     <div class="img-field__controls">
       <label class="body-sm img-field__file">
-        <span class="bc-field__label">{{ label }} (JPG, PNG, WebP o GIF, máx. 3 MB)</span>
+        <span class="bc-field__label">{{ label }} (apaisada 4:3, p. ej. 1200 × 896; JPG, PNG, WebP o GIF; máx. 3 MB)</span>
         <input ref="input" type="file" :accept="TYPES.join(',')" :disabled="busy" @change="choose" />
       </label>
       <BInput v-model="alt" label="Texto alternativo" hint="Describe la foto: «Ovillo de algodón rosa con etiqueta de Buclees»." maxlength="200" />
@@ -87,7 +87,7 @@ function upload() {
 <style scoped>
 .img-field {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 128px 1fr;
   gap: var(--space-4);
   align-items: start;
 }
@@ -99,7 +99,7 @@ function upload() {
 .img-field__preview {
   display: grid;
   place-items: center;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   border-radius: var(--radius-md);
   background: var(--surface-200);
   overflow: hidden;

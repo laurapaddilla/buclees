@@ -11,7 +11,13 @@ export const variants = {
     ['Beige', '#9f7f5a', 6, '/productos/algodon-dk-beige.jpg'],
     ['Gris perla', '#c0bfc3', 4, '/productos/algodon-dk-gris-perla.jpg'],
   ],
-  'Merino Worsted': [['Oliva', '#6f7a35', 8], ['Crema', '#efe4c8', 7], ['Rosa empolvado', '#d9a0a8', 5], ['Mostaza', '#d39e2a', 5]],
+  'Merino Worsted': [
+    ['Oliva', '#605c38', 8, '/productos/merino-worsted-oliva.jpg'],
+    ['Crema', '#e8dbca', 7, '/productos/merino-worsted-crema.jpg'],
+    ['Rosa', '#d0a6a4', 5, '/productos/merino-worsted-rosa.jpg'],
+    ['Mostaza', '#bf8836', 5, '/productos/merino-worsted-mostaza.jpg'],
+    ['Azul', '#acd1c8', 6, '/productos/merino-worsted-azul.jpg'],
+  ],
   'Algodón Fingering': [
     ['Blanco roto', '#efe8d8', 10, '/productos/algodon-fingering-blanco-roto.jpg'],
     ['Lavanda', '#c9b2e4', 10, '/productos/algodon-fingering-lavanda.jpg'],
@@ -25,9 +31,16 @@ export const variants = {
     ['Azul', '#1b66ce', 0, '/productos/chenilla-bulky-azul.jpg'],
   ],
   'Ovillo edición otoño': [['Teja', '#b5552e', 0]],
-  'Kit pulpo amigurumi': [['Rosa', '#f29cc0', 6], ['Amarillo', '#f2c94c', 6]],
+  'Kit pulpo amigurumi': [
+    ['Rosa', '#f29cc0', 6, '/productos/kit-pulpo-rosa.jpg'],
+    ['Amarillo', '#f2c94c', 6, '/productos/kit-pulpo-amarillo.jpg'],
+  ],
   'Ganchillo ergonómico': [['3,5 mm', null, 8], ['4 mm', null, 8], ['5 mm', null, 4]],
-  'Bolsa de almacenaje': [['Crudo', '#efe4c8', 5], ['Oliva', '#6f7a35', 5]],
+  'Bolsa de almacenaje': [
+    ['Mostaza', '#c57e29', 5, '/productos/bolsa-almacenaje-mostaza.jpg'],
+    ['Oliva', '#4f4832', 5, '/productos/bolsa-almacenaje-oliva.jpg'],
+    ['Rosa', '#d39a90', 5, '/productos/bolsa-almacenaje-rosa.jpg'],
+  ],
 };
 
 // Productos renombrados después de crearse (para actualizar bases ya sembradas).
@@ -37,6 +50,15 @@ const renamed = { 'Ganchillo ergonómico 4 mm': 'Ganchillo ergonómico' };
 const renamedVariants = {
   'Algodón DK': { Crudo: 'Beige' },
   'Chenilla Bulky': { Amarillo: 'Mostaza', Gris: 'Azul' },
+  'Merino Worsted': { 'Rosa empolvado': 'Rosa' },
+  'Bolsa de almacenaje': { Crudo: 'Mostaza' },
+};
+
+// Foto del producto (los que no tienen una por color): [url, texto alternativo].
+const productImages = {
+  'Kit manta granny': ['/productos/kit-manta-granny.jpg', 'Kit de la manta granny: ovillos de colores y su patrón'],
+  'Ganchillo ergonómico': ['/productos/ganchillo-ergonomico.jpg', 'Caja con tres ganchillos ergonómicos de Buclees en rosa, amarillo y oliva'],
+  'Marcadores de puntos (20 u.)': ['/productos/marcadores-puntos.jpg', 'Marcadores de puntos de colores'],
 };
 
 // Metraje corregido después de crearse: el que pone la etiqueta de la foto de la autora.
@@ -62,6 +84,9 @@ export async function applyVariants(db) {
         [title, from, to],
       );
     }
+  }
+  for (const [title, [url, alt]] of Object.entries(productImages)) {
+    await db.query('UPDATE products SET image_url = $2, image_alt = $3 WHERE title = $1', [title, url, alt]);
   }
   for (const [title, value] of Object.entries(meters)) {
     await db.query('UPDATE products SET meters = $2 WHERE title = $1', [title, value]);

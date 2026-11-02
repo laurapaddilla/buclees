@@ -75,14 +75,14 @@ const MAX_SWATCHES = 5;
   outline-offset: 2px;
 }
 
-/* Marco fijo 3:4 para todas las tarjetas, con foto o con dibujo: la imagen no puede cambiar su altura
-   y los títulos de una fila quedan alineados. Las fotos se preparan a 900 × 1200 (3:4) con el ovillo
-   centrado y a la misma escala, así que llenan el marco sin recortar el ovillo. */
+/* Marco fijo 4:3 para todas las tarjetas, con foto o con dibujo: la imagen no puede cambiar su altura
+   y los títulos de una fila quedan alineados. Las fotos de la autora son todas 4:3 (2400 × 1792,
+   publicadas a 1200 × 896), así que llenan el marco sin recortar nada. */
 .product__media {
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   padding: var(--space-4);
   background: var(--surface-200);
 }

@@ -211,9 +211,7 @@ function addToCart() {
   }
 }
 
-/* Con foto: la foto ocupa la caja (vertical, como las de la autora), sin el fondo crema alrededor. */
-/* Con foto: marco fijo 3:4, igual que las tarjetas (las fotos miden 900 × 1200).
-   En el móvil, como mucho 300px de ancho para que el color y el botón de comprar se vean pronto. */
+/* Con foto: marco fijo 4:3, igual que las tarjetas (todas las fotos son 4:3), sin el fondo crema alrededor. */
 .item__media.has-photo {
   padding: 0;
   overflow: hidden;
@@ -222,15 +220,8 @@ function addToCart() {
 .item__img {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
-}
-
-@media (max-width: 859px) {
-  .item__media.has-photo {
-    max-width: 300px;
-    margin: 0 auto;
-  }
 }
 
 .item__info {
