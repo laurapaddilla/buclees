@@ -12,7 +12,7 @@ import {
   updateProject,
   uploadPdf,
 } from '@/services/projects.js';
-import { listPatterns } from '@/services/patterns.js';
+import { getPattern, listPatterns } from '@/services/patterns.js';
 import { DIFFICULTY } from '@/utils/labels.js';
 import { clearLastProject } from '@/utils/lastProject.js';
 
@@ -37,6 +37,9 @@ const currentPdf = ref(null); // PDF que ya tiene el proyecto (al editar): { nam
 const pdfFile = ref(null); // PDF nuevo elegido en el formulario (File)
 
 const patterns = ref([]);
+// Patrón que llega ya elegido desde «Tejer este patrón» (decisión de la autora, 02/11/2026): no se vuelve
+// a preguntar ni el patrón ni el material ni las vueltas (con un patrón por partes el contador se coloca solo).
+const fixedPattern = ref(null);
 const loading = ref(true);
 const loadError = ref('');
 const saving = ref(false);
@@ -88,9 +91,15 @@ onMounted(async () => {
     patterns.value = patternList;
     // Desde "Tejer este patrón" (/taller/nuevo?patron=5) el patrón llega ya elegido.
     const fromPattern = Number(route.query.patron);
-    if (!isEdit.value && patternList.some((p) => p.id === fromPattern)) {
-      form.source = 'buclees';
-      form.pattern_id = fromPattern;
+    if (!isEdit.value && fromPattern) {
+      // Si no es de Buclees, puede ser uno de mis patrones privados (getPattern los devuelve con sesión).
+      const chosen = patternList.find((p) => p.id === fromPattern) ?? (await getPattern(fromPattern).catch(() => null));
+      if (chosen) {
+        fixedPattern.value = chosen;
+        form.source = 'buclees';
+        form.pattern_id = chosen.id;
+        form.name = chosen.title;
+      }
     }
     if (project) {
       form.name = project.name;
@@ -179,12 +188,14 @@ async function remove() {
 <template>
   <section class="page">
     <div class="form-card form-card--wide">
-      <RouterLink :to="isEdit ? `/taller/${projectId}` : '/taller'" class="body-sm back-link">
+      <RouterLink v-if="fixedPattern" :to="`/patrones/${fixedPattern.id}`" class="body-sm back-link">← Volver al patrón</RouterLink>
+      <RouterLink v-else :to="isEdit ? `/taller/${projectId}` : '/taller'" class="body-sm back-link">
         ← {{ isEdit ? 'Volver al contador' : 'Volver al taller' }}
       </RouterLink>
       <h1 class="h2 page-title">{{ isEdit ? 'Editar proyecto' : 'Nuevo proyecto' }}</h1>
       <p class="body-sm page-intro">
-        {{ isEdit ? 'Cambia los datos de tu labor.' : 'Ponle nombre a tu labor y elige desde qué vuelta empiezas a contar.' }}
+        <template v-if="fixedPattern">Vas a tejer <strong>{{ fixedPattern.title }}</strong>. Ponle nombre a tu proyecto y empieza a contar.</template>
+        <template v-else>{{ isEdit ? 'Cambia los datos de tu labor.' : 'Ponle nombre a tu labor y elige desde qué vuelta empiezas a contar.' }}</template>
       </p>
 
       <p v-if="loading" aria-live="polite">Cargando…</p>
@@ -195,13 +206,14 @@ async function remove() {
 
         <BInput v-model="form.name" label="Nombre" placeholder="Manta del salón" :error="fieldErrors.name" />
         <BInput
+          v-if="!fixedPattern"
           v-model="form.material"
           label="Material (opcional)"
           placeholder="Algodón DK rosa"
           :error="fieldErrors.material"
         />
 
-        <fieldset class="source">
+        <fieldset v-if="!fixedPattern" class="source">
           <legend class="bc-field__label">Patrón</legend>
           <div class="source__options">
             <label :class="['source__option', { 'is-on': form.source === 'none' }]">
@@ -252,7 +264,7 @@ async function remove() {
           </select>
         </div>
 
-        <div class="field-row">
+        <div v-if="!fixedPattern" class="field-row">
           <BInput
             v-if="!isEdit"
             v-model="form.start_row"

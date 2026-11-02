@@ -9,6 +9,7 @@ const props = defineProps({
   imageAlt: { type: String, default: '' },
   busy: { type: Boolean, default: false },
   label: { type: String, default: 'Foto' },
+  altHint: { type: String, default: 'Describe la foto: «Ovillo de algodón rosa con etiqueta de Buclees».' },
 });
 const emit = defineEmits(['upload', 'remove']);
 
@@ -73,7 +74,7 @@ function upload() {
         <span class="bc-field__label">{{ label }} (apaisada 4:3, p. ej. 1200 × 896; JPG, PNG, WebP o GIF; máx. 3 MB)</span>
         <input ref="input" type="file" :accept="TYPES.join(',')" :disabled="busy" @change="choose" />
       </label>
-      <BInput v-model="alt" label="Texto alternativo" hint="Describe la foto: «Ovillo de algodón rosa con etiqueta de Buclees»." maxlength="200" />
+      <BInput v-model="alt" label="Texto alternativo" :hint="altHint" maxlength="200" />
       <p v-if="error" class="save-status is-error" role="alert">{{ error }}</p>
       <div class="img-field__buttons">
         <BButton size="sm" :disabled="busy || !file" @click="upload">Subir foto</BButton>
