@@ -50,13 +50,23 @@ export async function listPatterns({ difficulty } = {}) {
   return rows;
 }
 
+// Quién puede editar un patrón: su dueña y, si es de Buclees (sin dueña), la administradora.
+// $u = id de la usuaria y $a = si es admin (números de parámetro de cada consulta).
+const canEdit = (u, a) => `(user_id = $${u} OR ($${a} AND user_id IS NULL))`;
+const isAdmin = (user) => user?.role === 'admin';
+
 // Un patrón completo: datos, materiales, autoría y sus partes con los pasos.
-// Se ve si está publicado o si es de quien lo pide (userId); un patrón privado ajeno da 404.
-export async function getPattern(id, userId = null) {
+// Se ve si está publicado o si es de quien lo pide; un patrón privado ajeno da 404.
+// La admin también ve los retirados (para editarlos o volver a publicarlos).
+// can_edit: lo puede cambiar quien lo pide (sus patrones y, la admin, los de Buclees).
+export async function getPattern(id, user = null) {
   const { rows } = await query(
-    `SELECT ${PUBLIC_COLUMNS}, materials, source_url, COALESCE(user_id = $2, false) AS is_mine
-     FROM patterns WHERE id = $1 AND is_active AND (is_public OR user_id = $2)`,
-    [id, userId],
+    `SELECT ${PUBLIC_COLUMNS}, materials, source_url, is_active,
+            COALESCE(user_id = $2, false) AS is_mine,
+            (user_id IS NULL) AS is_buclees,
+            COALESCE(${canEdit(2, 3)}, false) AS can_edit
+     FROM patterns WHERE id = $1 AND (is_active OR $3) AND (is_public OR user_id = $2)`,
+    [id, user?.id ?? null, isAdmin(user)],
   );
   if (rows.length === 0) throw new HttpError(404, 'Patrón no encontrado');
   const sections = await loadSections(id);
@@ -165,11 +175,15 @@ export async function savePattern(user, id, data) {
       patternId = rows[0].id;
     } else {
       // FOR UPDATE: dos guardados a la vez del mismo patrón se hacen uno detrás de otro.
-      const { rows } = await client.query('SELECT id FROM patterns WHERE id = $1 AND user_id = $2 FOR UPDATE', [id, user.id]);
+      const { rows } = await client.query(
+        `SELECT id FROM patterns WHERE id = $1 AND ${canEdit(2, 3)} FOR UPDATE`,
+        [id, user.id, isAdmin(user)],
+      );
       if (rows.length === 0) throw new HttpError(404, NOT_FOUND);
+      // Un patrón de Buclees (sin dueña) siempre es público: para quitarlo se retira (is_active).
       await client.query(
         `UPDATE patterns SET title = $2, description = $3, difficulty = $4, hook_size = $5, yarn_weight = $6,
-                             materials = $7, is_public = $8
+                             materials = $7, is_public = (user_id IS NULL OR $8)
          WHERE id = $1`,
         [id, ...meta],
       );
@@ -182,35 +196,58 @@ export async function savePattern(user, id, data) {
   } finally {
     client.release();
   }
-  return getPattern(patternId, user.id);
+  return getPattern(patternId, user);
 }
 
 // Borrar un patrón propio: sus partes y pasos se borran en cascada; los proyectos que lo seguían se quedan sin él.
-export async function deletePattern(userId, id) {
-  const { rows } = await query('DELETE FROM patterns WHERE id = $1 AND user_id = $2 RETURNING image_url', [id, userId]);
+export async function deletePattern(user, id) {
+  const { rows } = await query('DELETE FROM patterns WHERE id = $1 AND user_id = $2 RETURNING image_url', [id, user.id]);
   if (rows.length === 0) throw new HttpError(404, NOT_FOUND);
   await removeUploadedImage(rows[0].image_url);
 }
 
 // Foto opcional del patrón (4:3), con texto alternativo obligatorio, como en los productos.
-export async function setPatternImage(userId, id, buffer, alt) {
+export async function setPatternImage(user, id, buffer, alt) {
   const ext = imageExtension(buffer);
   if (!ext) throw new HttpError(400, 'Sube una imagen JPG, PNG, WebP o GIF');
   const text = (alt ?? '').trim();
   if (!text) throw new HttpError(400, 'Escribe el texto alternativo: describe la foto para quien no puede verla');
   if (text.length > 200) throw new HttpError(400, 'El texto alternativo: como máximo 200 caracteres');
-  const { rows } = await query('SELECT image_url FROM patterns WHERE id = $1 AND user_id = $2', [id, userId]);
+  const { rows } = await query(`SELECT image_url FROM patterns WHERE id = $1 AND ${canEdit(2, 3)}`, [id, user.id, isAdmin(user)]);
   if (rows.length === 0) throw new HttpError(404, NOT_FOUND);
   const url = await saveImage(buffer, ext);
   await query('UPDATE patterns SET image_url = $2, image_alt = $3 WHERE id = $1', [id, url, text]);
   await removeUploadedImage(rows[0].image_url);
-  return getPattern(id, userId);
+  return getPattern(id, user);
 }
 
-export async function removePatternImage(userId, id) {
-  const { rows } = await query('SELECT image_url FROM patterns WHERE id = $1 AND user_id = $2', [id, userId]);
+export async function removePatternImage(user, id) {
+  const { rows } = await query(`SELECT image_url FROM patterns WHERE id = $1 AND ${canEdit(2, 3)}`, [id, user.id, isAdmin(user)]);
   if (rows.length === 0) throw new HttpError(404, NOT_FOUND);
   await query('UPDATE patterns SET image_url = NULL, image_alt = NULL WHERE id = $1', [id]);
   await removeUploadedImage(rows[0].image_url);
-  return getPattern(id, userId);
+  return getPattern(id, user);
+}
+
+// ---------- Panel de admin ----------
+
+// Todos los patrones de Buclees: los del seed (sin dueña) y los que ha publicado la admin, también los retirados.
+export async function listAdmin() {
+  const { rows } = await query(
+    `SELECT ${PUBLIC_COLUMNS}, is_active, (user_id IS NULL) AS is_buclees,
+            (SELECT count(*)::int FROM pattern_sections ps WHERE ps.pattern_id = patterns.id) AS section_count,
+            (SELECT count(*)::int FROM projects pr WHERE pr.pattern_id = patterns.id) AS project_count
+     FROM patterns WHERE user_id IS NULL OR is_public
+     ORDER BY is_active DESC, is_demo, title`,
+  );
+  return rows;
+}
+
+// Retirar (o volver a publicar) un patrón de Buclees sin borrarlo: los proyectos y kits que lo usan no lo pierden.
+export async function setPatternActive(id, isActive) {
+  const { rowCount } = await query(
+    'UPDATE patterns SET is_active = $2 WHERE id = $1 AND (user_id IS NULL OR is_public)',
+    [id, isActive],
+  );
+  if (rowCount === 0) throw new HttpError(404, NOT_FOUND);
 }

@@ -19,7 +19,7 @@ export async function list(req, res) {
 
 // Con sesión (optionalAuth) también se ven los patrones privados propios.
 export async function getOne(req, res) {
-  const pattern = await patternService.getPattern(patternId(req), req.user?.id ?? null);
+  const pattern = await patternService.getPattern(patternId(req), req.user ?? null);
   res.json({ pattern });
 }
 
@@ -36,14 +36,14 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  await patternService.deletePattern(req.user.id, patternId(req));
+  await patternService.deletePattern(req.user, patternId(req));
   res.status(204).end();
 }
 
 export async function setImage(req, res) {
-  res.json({ pattern: await patternService.setPatternImage(req.user.id, patternId(req), req.body, imageAlt(req)) });
+  res.json({ pattern: await patternService.setPatternImage(req.user, patternId(req), req.body, imageAlt(req)) });
 }
 
 export async function removeImage(req, res) {
-  res.json({ pattern: await patternService.removePatternImage(req.user.id, patternId(req)) });
+  res.json({ pattern: await patternService.removePatternImage(req.user, patternId(req)) });
 }

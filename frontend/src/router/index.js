@@ -22,6 +22,7 @@ const routes = [
   { path: '/admin/productos', name: 'admin-products', component: () => import('@/views/AdminProductsView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/productos/nuevo', name: 'admin-product-new', component: () => import('@/views/AdminProductView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/productos/:id(\\d+)', name: 'admin-product', component: () => import('@/views/AdminProductView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/patrones', name: 'admin-patterns', component: () => import('@/views/AdminPatternsView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/patrones', name: 'patterns', component: () => import('@/views/PatternsView.vue') },
   { path: '/patrones/:id(\\d+)', name: 'pattern', component: () => import('@/views/PatternView.vue') },
   // Editor de patrones propios (crear y editar en la misma vista).

@@ -1,5 +1,6 @@
 import * as orderService from '../services/order.service.js';
 import * as productService from '../services/admin-product.service.js';
+import * as patternService from '../services/pattern.service.js';
 import { parseId } from '../utils/parseId.js';
 import { ORDER_STATUSES } from '../validators/admin.validators.js';
 import { HttpError } from '../utils/HttpError.js';
@@ -73,4 +74,14 @@ export async function setVariantImage(req, res) {
 
 export async function removeVariantImage(req, res) {
   res.json({ product: await productService.removeVariantImage(variantId(req)) });
+}
+
+// Patrones de Buclees (se editan con el editor de patrones: PUT /api/patterns/:id)
+export async function listPatterns(req, res) {
+  res.json({ patterns: await patternService.listAdmin() });
+}
+
+export async function setPatternActive(req, res) {
+  await patternService.setPatternActive(parseId(req.params.id, 'Patrón no encontrado'), req.body.is_active);
+  res.status(204).end();
 }

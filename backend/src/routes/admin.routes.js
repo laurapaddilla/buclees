@@ -9,6 +9,7 @@ import {
   updateProductSchema,
   createVariantSchema,
   updateVariantSchema,
+  patternActiveSchema,
 } from '../validators/admin.validators.js';
 
 const router = Router();
@@ -35,5 +36,9 @@ router.put('/products/:id/image', rawImage, adminController.setProductImage);
 router.delete('/products/:id/image', adminController.removeProductImage);
 router.put('/variants/:variantId/image', rawImage, adminController.setVariantImage);
 router.delete('/variants/:variantId/image', adminController.removeVariantImage);
+
+// Patrones de Buclees: lista (también los retirados) y retirar o volver a publicar.
+router.get('/patterns', adminController.listPatterns);
+router.patch('/patterns/:id', validate(patternActiveSchema), adminController.setPatternActive);
 
 export default router;

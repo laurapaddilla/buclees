@@ -79,6 +79,14 @@ watch(() => route.params.id, (id) => id && load(id), { immediate: true });
         <RouterLink :to="`/taller/nuevo?patron=${pattern.id}`" class="bc-btn bc-btn--primary bc-btn--md link-btn">
           Tejer este patrón
         </RouterLink>
+        <!-- Tus patrones y, para la admin, los de Buclees (can_edit lo calcula el servidor) -->
+        <RouterLink
+          v-if="pattern.can_edit"
+          :to="{ name: 'pattern-edit', params: { id: pattern.id }, query: pattern.is_buclees ? { desde: 'panel' } : {} }"
+          class="bc-btn bc-btn--secondary bc-btn--md link-btn"
+        >
+          Editar
+        </RouterLink>
       </header>
 
       <div class="pat__layout">

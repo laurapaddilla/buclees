@@ -6,6 +6,7 @@ const route = useRoute();
 const tabs = [
   { to: '/admin/pedidos', label: 'Pedidos' },
   { to: '/admin/productos', label: 'Productos' },
+  { to: '/admin/patrones', label: 'Patrones' },
 ];
 </script>
 

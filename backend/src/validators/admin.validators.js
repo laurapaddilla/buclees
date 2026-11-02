@@ -93,3 +93,8 @@ export const updateVariantSchema = z
   .object(variantFields)
   .partial()
   .refine((v) => Object.keys(v).length > 0, { error: 'No hay nada que cambiar' });
+
+// Retirar o volver a publicar un patrón de Buclees.
+export const patternActiveSchema = z.object({
+  is_active: z.boolean({ error: 'Indica si el patrón está publicado (true o false)' }),
+});

@@ -25,3 +25,7 @@ export const adminSetProductImage = async (id, file, alt) => (await apiUpload(`/
 export const adminRemoveProductImage = async (id) => (await api(`/admin/products/${id}/image`, { method: 'DELETE' })).product;
 export const adminSetVariantImage = async (id, file, alt) => (await apiUpload(`/admin/variants/${id}/image`, file, altHeader(alt))).product;
 export const adminRemoveVariantImage = async (id) => (await api(`/admin/variants/${id}/image`, { method: 'DELETE' })).product;
+
+// Patrones de Buclees (se editan con el editor de patrones: services/patterns.js)
+export const adminListPatterns = async () => (await api('/admin/patterns')).patterns;
+export const adminSetPatternActive = (id, isActive) => api(`/admin/patterns/${id}`, { method: 'PATCH', body: { is_active: isActive } });

@@ -20,6 +20,11 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const isNew = computed(() => route.name === 'pattern-new');
+// Patrón de Buclees (sin dueña): solo lo edita la admin, siempre está publicado y no se borra (se retira en el panel).
+const isBuclees = computed(() => Boolean(pattern.value?.is_buclees));
+// Desde el panel de admin, «volver» lleva al panel.
+const fromPanel = computed(() => route.query.desde === 'panel' || isBuclees.value);
+const backTo = computed(() => (fromPanel.value ? { name: 'admin-patterns' } : { name: 'patterns', query: { ver: 'mios' } }));
 
 const YARN_WEIGHTS = ['Lace', 'Fingering', 'Sport', 'DK', 'Worsted', 'Bulky'];
 
@@ -135,15 +140,17 @@ async function load() {
   try {
     if (isNew.value) {
       pattern.value = null;
-      Object.assign(form, { title: '', description: '', difficulty: 'principiante', hook_size: '', yarn_weight: '', materials: '', is_public: false });
+      // Un patrón nuevo creado desde el panel nace publicado.
+      const isPublic = auth.isAdmin && route.query.desde === 'panel';
+      Object.assign(form, { title: '', description: '', difficulty: 'principiante', hook_size: '', yarn_weight: '', materials: '', is_public: isPublic });
       const first = blankSection(1);
       first.steps.push(blankStep(first, 'rows'));
       sections.value = [first];
       snapshot.value = JSON.stringify(payload());
     } else {
       const p = await getPattern(route.params.id);
-      // Los patrones de Buclees (y los de otras personas) no se pueden editar ni copiar.
-      if (!p.is_mine) throw new Error('Solo puedes editar los patrones que has creado tú.');
+      // Cada una edita los suyos; los de Buclees, solo la admin (el servidor lo vuelve a comprobar al guardar).
+      if (!p.can_edit) throw new Error('Solo puedes editar los patrones que has creado tú.');
       fill(p);
     }
   } catch (err) {
@@ -284,7 +291,7 @@ async function save() {
     if (isNew.value) {
       const p = await createPattern(payload());
       fill(p);
-      await router.replace({ name: 'pattern-edit', params: { id: p.id } });
+      await router.replace({ name: 'pattern-edit', params: { id: p.id }, query: route.query });
       message.value = 'Patrón creado. Ya puedes usarlo en un proyecto del Taller.';
     } else {
       fill(await updatePattern(pattern.value.id, payload()));
@@ -310,7 +317,7 @@ async function removePattern() {
   try {
     await deletePattern(pattern.value.id);
     snapshot.value = JSON.stringify(payload()); // ya no hay cambios que perder
-    router.push({ name: 'patterns', query: { ver: 'mios' } });
+    router.push(backTo.value);
   } catch (e) {
     formError.value = e.message;
     busy.value = false;
@@ -338,7 +345,7 @@ const removeImage = () => runImage(() => removePatternImage(pattern.value.id), '
 
 <template>
   <section class="page editor">
-    <RouterLink :to="{ name: 'patterns', query: { ver: 'mios' } }" class="body-sm back-link">← Mis patrones</RouterLink>
+    <RouterLink :to="backTo" class="body-sm back-link">← {{ fromPanel ? 'Patrones (panel)' : 'Mis patrones' }}</RouterLink>
 
     <p v-if="loading" class="notice" aria-live="polite">Cargando…</p>
     <div v-else-if="loadError" class="notice" role="alert"><p>{{ loadError }}</p></div>
@@ -378,7 +385,11 @@ const removeImage = () => runImage(() => removePatternImage(pattern.value.id), '
           <label class="bc-field__label" for="materiales">Materiales (uno por línea, opcional)</label>
           <textarea id="materiales" v-model="form.materials" class="bc-input textarea" rows="3" maxlength="2000" placeholder="Algodón DK rosa&#10;Relleno&#10;Ojos de seguridad de 8 mm" />
         </div>
-        <label v-if="auth.isAdmin" class="check body-sm">
+        <p v-if="isBuclees" class="caption muted">
+          Patrón de Buclees: siempre está publicado. Para quitarlo de Patrones, retíralo desde el panel.
+          Los proyectos que lo siguen conservan su progreso al guardar.
+        </p>
+        <label v-else-if="auth.isAdmin" class="check body-sm">
           <input v-model="form.is_public" type="checkbox" />
           Publicar en Buclees (lo verán todas en Patrones)
         </label>
@@ -526,7 +537,7 @@ const removeImage = () => runImage(() => removePatternImage(pattern.value.id), '
         <p v-if="dirty && !saving" class="caption muted">Tienes cambios sin guardar.</p>
       </div>
 
-      <section v-if="!isNew" class="danger">
+      <section v-if="!isNew && !isBuclees" class="danger">
         <template v-if="!confirmDelete">
           <BButton size="sm" variant="ghost" @click="confirmDelete = true">Borrar el patrón</BButton>
         </template>
