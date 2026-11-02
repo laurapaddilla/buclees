@@ -35,7 +35,6 @@ export const variants = {
     ['Rosa', '#f29cc0', 6, '/productos/kit-pulpo-rosa.jpg'],
     ['Amarillo', '#f2c94c', 6, '/productos/kit-pulpo-amarillo.jpg'],
   ],
-  'Ganchillo ergonómico': [['3,5 mm', null, 8], ['4 mm', null, 8], ['5 mm', null, 4]],
   'Bolsa de almacenaje': [
     ['Mostaza', '#c57e29', 5, '/productos/bolsa-almacenaje-mostaza.jpg'],
     ['Oliva', '#4f4832', 5, '/productos/bolsa-almacenaje-oliva.jpg'],
@@ -44,7 +43,22 @@ export const variants = {
 };
 
 // Productos renombrados después de crearse (para actualizar bases ya sembradas).
-const renamed = { 'Ganchillo ergonómico 4 mm': 'Ganchillo ergonómico' };
+const renamed = {
+  'Ganchillo ergonómico 4 mm': 'Pack de 3 ganchillos ergonómicos',
+  'Ganchillo ergonómico': 'Pack de 3 ganchillos ergonómicos',
+};
+
+// El ganchillo por tamaños pasó a ser un pack de 3 (decisión de la autora, 02/11/2026, con la foto del pack).
+// En una base ya sembrada: se retiran sus tamaños (no se borran: pueden estar en pedidos) y se pone
+// el precio, el stock y la descripción del pack. Solo una vez: si ya no tiene tamaños activos, no se toca.
+const packs = {
+  'Pack de 3 ganchillos ergonómicos': {
+    price: '16.90',
+    stock: 8,
+    hook_size: '3,5, 4 y 5 mm',
+    description: 'Tres ganchillos de 3,5, 4 y 5 mm con mango de silicona blanda, para tejer durante horas sin cansar la mano. En caja de cartón.',
+  },
+};
 
 // Variantes renombradas para que coincidan con las fotos de la autora (01/11/2026).
 const renamedVariants = {
@@ -57,7 +71,7 @@ const renamedVariants = {
 // Foto del producto (los que no tienen una por color): [url, texto alternativo].
 const productImages = {
   'Kit manta granny': ['/productos/kit-manta-granny.jpg', 'Kit de la manta granny: ovillos de colores y su patrón'],
-  'Ganchillo ergonómico': ['/productos/ganchillo-ergonomico.jpg', 'Caja con tres ganchillos ergonómicos de Buclees en rosa, amarillo y oliva'],
+  'Pack de 3 ganchillos ergonómicos': ['/productos/ganchillo-ergonomico.jpg', 'Caja con tres ganchillos ergonómicos de Buclees en rosa, amarillo y oliva'],
   'Marcadores de puntos (20 u.)': ['/productos/marcadores-puntos.jpg', 'Marcadores de puntos de colores'],
 };
 
@@ -83,6 +97,16 @@ export async function applyVariants(db) {
            AND NOT EXISTS (SELECT 1 FROM product_variants w WHERE w.product_id = p.id AND w.name = $3)`,
         [title, from, to],
       );
+    }
+  }
+  for (const [title, p] of Object.entries(packs)) {
+    const { rowCount } = await db.query(
+      `UPDATE products SET price = $2, stock = $3, hook_size = $4, description = $5
+       WHERE title = $1 AND EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = products.id AND v.is_active)`,
+      [title, p.price, p.stock, p.hook_size, p.description],
+    );
+    if (rowCount) {
+      await db.query('UPDATE product_variants SET is_active = false WHERE product_id = (SELECT id FROM products WHERE title = $1)', [title]);
     }
   }
   for (const [title, [url, alt]] of Object.entries(productImages)) {

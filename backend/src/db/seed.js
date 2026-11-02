@@ -48,9 +48,9 @@ const products = [
     yarn_weight: 'Worsted', hook_size: '4,5 mm' },
 
   // Accesorios
-  { title: 'Ganchillo ergonómico', category: 'accesorio', price: 6.5, stock: 20,
-    description: 'Mango de silicona blanda para tejer durante horas sin cansar la mano.',
-    hook_size: '3,5–5 mm' },
+  { title: 'Pack de 3 ganchillos ergonómicos', category: 'accesorio', price: 16.9, stock: 8,
+    description: 'Tres ganchillos de 3,5, 4 y 5 mm con mango de silicona blanda, para tejer durante horas sin cansar la mano. En caja de cartón.',
+    hook_size: '3,5, 4 y 5 mm' },
   { title: 'Marcadores de puntos (20 u.)', category: 'accesorio', price: 2.75, stock: 50,
     description: 'Marcadores de colores con cierre para señalar inicios de vuelta y aumentos.' },
   { title: 'Bolsa de almacenaje', category: 'accesorio', price: 12.5, stock: 10,
