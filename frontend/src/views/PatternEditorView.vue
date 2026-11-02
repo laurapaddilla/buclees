@@ -424,6 +424,7 @@ const removeImage = () => runImage(() => removePatternImage(pattern.value.id), '
           <legend class="bc-field__label">Se teje</legend>
           <label class="check body-sm"><input v-model="sec.chart_shape" type="radio" value="redondo" /> En redondo</label>
           <label class="check body-sm"><input v-model="sec.chart_shape" type="radio" value="plano" /> En filas (plano)</label>
+          <label class="check body-sm"><input v-model="sec.chart_shape" type="radio" value="cuadrado" /> En cuadrado (granny)</label>
         </fieldset>
         <details class="more">
           <summary class="body-sm">Hilo y nota de la parte</summary>

@@ -24,7 +24,7 @@ La funcionalidad estrella es la vista de trabajo del proyecto: contador de filas
 - Frontend: Vue 3 + Vite + Vue Router + Pinia.
 - Estructura backend: `routes/ → controllers/ → services/ → db/`, más `middleware/` y `migrations/`.
 
-## Base de datos (14 tablas, scripts SQL de migración 001-015)
+## Base de datos (14 tablas, scripts SQL de migración 001-017)
 
 Especificación original (6 tablas); el 25/10/2026 se añadió `patterns` (ver "Esquema implementado").
 1. `users`: id, nombre, email (único), contraseña cifrada, rol (`user` / `admin`, con CHECK).
@@ -185,8 +185,9 @@ El diseño visual lo hace la autora en Figma. La carpeta `design/` es la **fuent
 - **Esquemas dibujados (migración 011, 01/11/2026; la autora pidió esquemas para todos los patrones: "si queda mal ya lo gestionaremos"):**
   - No se guardan imágenes. `pattern_sections.chart_shape` (`redondo`/`plano`) y `pattern_steps.chart` guardan el esquema en una notación corta, una línea por vuelta: `(2 pb, aum) x 6`, `am, 6 pb`, `base: 15 cad`, `ht: …` (por la hebra trasera) y `{3 pa}` (varios en el mismo punto). Un paso de varias vueltas iguales se dibuja una vez ("9-19").
   - `frontend/src/utils/chart.js` lee la notación y calcula las posiciones; `PatternChart.vue` dibuja el SVG con los símbolos internacionales (aumento V y disminución Λ, como en los esquemas de amigurumi) y una leyenda. En el contador, la vuelta actual se resalta en rosa (dentro de un `<details>` "Esquema" que se puede plegar).
-  - Los esquemas del seed están en `backend/src/db/seed-charts.js`, aparte del texto. `npm run seed:update` los guarda **sin borrar nada** (solo UPDATE e INSERT de lo que falta), así que se puede usar en `buclees_db`. También añade las variantes de `seed-shop.js`.
-  - Sin esquema: las orejas del conejo (erratas del original), las V 16-17 del vestido (sin recuento), el cuerpo del jersey y los pasos de texto sin recuento fijo. El granny se dibuja en círculo, no en cuadrado.
+  - Los esquemas del seed están en `backend/src/db/seed-charts.js`, aparte del texto. `npm run seed:update` los guarda **sin borrar nada** (solo UPDATE e INSERT de lo que falta), así que se puede usar en `buclees_db`. También añade las variantes de `seed-shop.js` y, desde el 02/11/2026, lleva el **texto de los patrones de Buclees** (`applyPatternText` en `seed-patterns.js`): actualiza los pasos por posición, añade los nuevos y, si cambia la última vuelta de una parte, mueve el objetivo de los contadores que la tenían.
+  - Sin esquema: las orejas del conejo (erratas del original), las V 16-17 del vestido (sin recuento), el cuerpo del jersey y los pasos de texto sin recuento fijo. 
+  - **Granny (decisión de la autora, 02/11/2026, a partir de una foto que pasó):** el granny clásico de 4 vueltas, una por color (12, 24, 36 y 48 pa), con grupos de 3 pa en el mismo hueco (`{3 pa}`) y 2 cad en las esquinas. El texto es de Claude y la foto de la autora no se publica (no es suya). **Forma `cuadrado` (migración 017)**: `layoutSquare` en `utils/chart.js` busca en cada vuelta las 4 tandas de cadenetas iguales (las esquinas) y reparte los demás puntos por los lados; el número de la vuelta va fuera de la esquina de arriba a la izquierda. También se puede elegir en el editor («En cuadrado (granny)»).
 - **Editor de patrones: decisiones de la autora del 02/11/2026** (en construcción):
   - **Cada vuelta se escribe con botones de puntos** (pb, aum, dism, cad…) que escriben la notación de los esquemas en un campo de texto que también se puede editar a mano, con el recuento y el esquema al momento.
   - **La instrucción escrita se genera sola** a partir de la notación («(2 pb, aum) × 6 (24)») y se puede cambiar o completar.

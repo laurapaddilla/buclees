@@ -49,7 +49,7 @@ const section = z.object({
   repeat_count: z.number().int().min(1, { error: 'Se teje al menos 1 vez' }).max(100).default(1),
   yarn: optionalText('El hilo', 100),
   note: optionalText('La nota', 500),
-  chart_shape: z.enum(['redondo', 'plano'], { error: 'La forma tiene que ser redondo o plano' }).nullable().default(null),
+  chart_shape: z.enum(['redondo', 'plano', 'cuadrado'], { error: 'La forma tiene que ser redondo, plano o cuadrado' }).nullable().default(null),
   steps: z.array(step).max(200, { error: 'Como máximo 200 pasos por parte' }).default([]),
 });
 

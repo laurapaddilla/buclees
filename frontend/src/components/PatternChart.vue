@@ -28,7 +28,7 @@ function stateOf(row) {
 
 const label = computed(() => {
   const n = rows.value.filter((r) => !r.base).length;
-  const forma = chart.value.shape === 'plano' ? 'en filas' : 'en redondo';
+  const forma = { plano: 'en filas', cuadrado: 'en cuadrado' }[chart.value.shape] ?? 'en redondo';
   return `Esquema de ${props.section.title.toLowerCase()} ${forma}, ${n} ${n === 1 ? 'vuelta' : 'vueltas'}`;
 });
 
@@ -57,6 +57,16 @@ function legendParts(abbr) {
           <!-- Franja rosa detrás de la vuelta que estás tejiendo -->
           <template v-if="stateOf(row) === 'current'">
             <circle v-if="chart.shape === 'redondo'" :r="row.band.r" class="chart__band" :stroke-width="row.band.width" />
+            <rect
+              v-else-if="chart.shape === 'cuadrado'"
+              :x="-row.band.s"
+              :y="-row.band.s"
+              :width="2 * row.band.s"
+              :height="2 * row.band.s"
+              rx="0.4"
+              class="chart__band"
+              :stroke-width="row.band.width"
+            />
             <rect v-else v-bind="row.band" rx="0.3" class="chart__band-flat" />
           </template>
 
@@ -112,7 +122,8 @@ function legendParts(abbr) {
   margin: 0 auto;
 }
 
-.chart__svg--redondo {
+.chart__svg--redondo,
+.chart__svg--cuadrado {
   max-width: 560px;
 }
 

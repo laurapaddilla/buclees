@@ -155,7 +155,9 @@ export function chartRows(steps) {
 // Coloca los puntos. Cada punto se dibuja con la base en (0, 0) y crece hacia arriba (y negativa);
 // `transform` lo lleva a su sitio. En redondo, «arriba» es hacia fuera del círculo.
 export function layoutChart(shape, rows) {
-  return shape === 'plano' ? layoutFlat(rows) : layoutRound(rows);
+  if (shape === 'plano') return layoutFlat(rows);
+  if (shape === 'cuadrado') return layoutSquare(rows);
+  return layoutRound(rows);
 }
 
 function layoutRound(rows) {
@@ -184,6 +186,76 @@ function layoutRound(rows) {
   });
   const R = r + 0.3;
   return { shape: 'redondo', rows: placed, ring, viewBox: `${-R} ${-R} ${2 * R} ${2 * R}`, width: 2 * R, height: 2 * R };
+}
+
+// Esquinas de una vuelta en cuadrado (granny): las 4 tandas de cadenetas de la misma longitud
+// («2 cad» en cada esquina). Devuelve dónde cae el centro de cada una, en unidades desde el
+// principio de la vuelta, o null si la vuelta no tiene exactamente 4.
+function squareCorners(row, widths) {
+  const runs = [];
+  let cum = 0;
+  let run = null;
+  row.stitches.forEach((s, j) => {
+    if (s.kind === 'single' && s.st === 'cad') {
+      run ??= { start: cum, len: 0, count: 0 };
+      run.len += widths[j];
+      run.count++;
+    } else if (run) {
+      runs.push(run);
+      run = null;
+    }
+    cum += widths[j];
+  });
+  if (run) runs.push(run);
+  const byCount = {};
+  for (const r of runs) (byCount[r.count] ??= []).push(r);
+  const corners = Object.values(byCount).find((list) => list.length === 4);
+  return corners ? corners.map((r) => r.start + r.len / 2) : null;
+}
+
+// En cuadrado: cada vuelta es un cuadrado de medio lado `a`; los puntos van por los lados,
+// mirando hacia fuera, y las cadenetas de las esquinas en diagonal.
+// Las esquinas del cuadrado (en el sentido en que se teje): arriba-izq., arriba-dcha., abajo-dcha., abajo-izq.
+function layoutSquare(rows) {
+  const ring = rows[0]?.ring ? 0.75 : null;
+  let r = ring ? ring + 0.45 : 0.8;
+  let a = r;
+  const placed = rows.map((row) => {
+    const widths = row.stitches.map(widthOf);
+    const total = widths.reduce((x, y) => x + y, 0) || 1;
+    const h = heightOf(row);
+    const cs = squareCorners(row, widths) ?? [0, 1, 2, 3].map((k) => (k * total) / 4);
+    cs.push(cs[0] + total);
+    const sides = [0, 1, 2, 3].map((k) => cs[k + 1] - cs[k]);
+    // El cuadrado crece lo justo para que quepa el lado más largo (al menos 1 unidad por punto).
+    a = Math.max(r, Math.max(...sides) / 2);
+    const P = [[-a, -a], [a, -a], [a, a], [-a, a], [-a, -a]];
+    let cum = 0;
+    const stitches = row.stitches.map((s, j) => {
+      let q = cum + widths[j] / 2;
+      cum += widths[j];
+      if (q < cs[0]) q += total;
+      let k = 0;
+      while (k < 3 && q >= cs[k + 1]) k++;
+      const f = (q - cs[k]) / sides[k];
+      const x = P[k][0] + f * (P[k + 1][0] - P[k][0]);
+      const y = P[k][1] + f * (P[k + 1][1] - P[k][1]);
+      // Hacia fuera del lado (0° arriba, 90° derecha…); junto a una esquina, en diagonal.
+      let deg = 90 * k;
+      if (q - cs[k] < 0.6) deg -= 45;
+      else if (cs[k + 1] - q < 0.6) deg += 45;
+      return { ...s, spread: (2 * a) / sides[k], transform: `translate(${x.toFixed(3)} ${y.toFixed(3)}) rotate(${deg})` };
+    });
+    r = a + h + ROW_GAP;
+    return {
+      ...row, stitches, h,
+      band: { s: a + h / 2, width: h + ROW_GAP },
+      // El número, fuera de la esquina de arriba a la izquierda (donde empieza la vuelta).
+      labelAt: { x: -(a + 1.15), y: -(a + 1.15) },
+    };
+  });
+  const R = Math.max(r + 0.3, a + 1.9);
+  return { shape: 'cuadrado', rows: placed, ring, viewBox: `${-R} ${-R} ${2 * R} ${2 * R}`, width: 2 * R, height: 2 * R };
 }
 
 function layoutFlat(rows) {

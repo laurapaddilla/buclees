@@ -15,7 +15,7 @@ export const charts = {
   },
   'Manta de granny squares': {
     Cuadrado: {
-      shape: 'redondo',
+      shape: 'cuadrado', // migración 017: lados rectos y las 2 cad en las esquinas
       steps: {
         1: 'am, 3 cad, 2 pa, (2 cad, 3 pa) x 3, 2 cad, pr',
         // {3 pa}: los tres pa en el mismo hueco, como un abanico.
