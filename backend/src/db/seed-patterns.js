@@ -25,17 +25,32 @@ export const patterns = [
     ],
   },
   {
-    title: 'Bolso de mercado', difficulty: 'principiante', hook_size: '5 mm', yarn_weight: 'Worsted',
-    description: 'Bolso de malla resistente para la compra, en una tarde.',
-    materials: 'Algodón Worsted, 200 g\nGanchillo de 5 mm',
+    // Versión propia de Buclees (02/11/2026): bolsa de red clásica, con texto y números propios.
+    title: 'Bolso de mercado', difficulty: 'principiante', hook_size: '4 mm', yarn_weight: 'DK',
+    description: 'Bolsa de red para la compra: base redonda de punto bajo, una red de cadenetas que se estira y dos asas.',
+    materials: 'Algodón DK, 2 ovillos (200 g)\nGanchillo de 4 mm\nMarcador de puntos\nAguja lanera',
     sections: [
-      { title: 'Bolso', steps: [
-        v(1, 1, ['cad', 'pb'], 'Teje 31 cad y vuelve con 1 pb en cada cadeneta desde la segunda (30).'),
-        v(2, 2, ['cad', 'pb'], '*5 cad, salta 2 puntos, 1 pb* hasta el final (10 arcos).'),
-        t('Cuerpo', ['cad', 'pb'], 'Repite la vuelta de malla dentro de los arcos hasta medir 35 cm (10 arcos).'),
+      { title: 'Base', note: 'Toda la bolsa se teje en espiral, sin cerrar las vueltas: marca el primer punto de cada vuelta.', steps: [
+        v(1, 1, ['am', 'pb'], 'Haz un am y teje 6 pb dentro. Cierra el anillo (6).'),
+        v(2, 2, ['aum'], '1 aum en cada punto (12).'),
+        v(3, 3, ['pb', 'aum'], '*1 pb, 1 aum* × 6 (18).'),
+        v(4, 4, ['pb', 'aum'], '*2 pb, 1 aum* × 6 (24).'),
+        v(5, 5, ['pb', 'aum'], '*3 pb, 1 aum* × 6 (30).'),
+        v(6, 6, ['pb', 'aum'], '*4 pb, 1 aum* × 6 (36).'),
+        v(7, 7, ['pb', 'aum'], '*5 pb, 1 aum* × 6 (42).'),
+        v(8, 8, ['pb', 'aum'], '*6 pb, 1 aum* × 6 (48).'),
+        v(9, 9, ['pb', 'aum'], '*7 pb, 1 aum* × 6 (54).'),
+        v(10, 10, ['pb', 'aum'], '*8 pb, 1 aum* × 6 (60). La base mide unos 18 cm de diámetro.'),
       ] },
-      { title: 'Asas', repeat: 2, steps: [
-        v(1, 8, ['pb'], '8 vueltas de pb sobre 10 puntos (10).'),
+      { title: 'Red', note: 'La red se estira mucho: mide el alto con la bolsa colgada.', steps: [
+        v(11, 11, ['cad', 'pb'], '*5 cad, salta 2 puntos, 1 pb en el siguiente* × 20 (20 arcos).'),
+        v(12, 30, ['cad', 'pb'], '*5 cad, 1 pb en el arco siguiente* × 20. Sigue en espiral hasta que la red mida unos 30 cm (20 arcos).'),
+      ] },
+      { title: 'Borde y asas', steps: [
+        v(31, 33, ['pb'], 'V 31: 3 pb en cada arco (60). V 32 y 33: 1 pb en cada punto (60).'),
+        v(34, 34, ['pb', 'cad'], 'Asas: 8 pb, 40 cad, salta 14 puntos, 16 pb, 40 cad, salta 14 puntos, 8 pb.'),
+        v(35, 37, ['pb'], '1 pb en cada punto y en cada cadeneta (112).'),
+        v(38, 38, ['pr'], '1 pr en cada punto (112). Remata y esconde las hebras.'),
       ] },
     ],
   },
@@ -180,13 +195,32 @@ export async function applyPatternText(db) {
   const missing = [];
   for (const pa of patterns) {
     const { rows: found } = await db.query(
-      `UPDATE patterns SET description = $2, materials = $3
+      `UPDATE patterns SET description = $2, materials = $3, difficulty = $4, hook_size = $5, yarn_weight = $6
        WHERE title = $1 AND user_id IS NULL RETURNING id`,
-      [pa.title, pa.description, pa.materials],
+      [pa.title, pa.description, pa.materials, pa.difficulty, pa.hook_size, pa.yarn_weight],
     );
     if (found.length === 0) {
       missing.push(pa.title);
       continue;
+    }
+    const patternId = found[0].id;
+    // Si han cambiado las partes (otros nombres u otro orden), se rehacen enteras, pero solo si
+    // ningún proyecto sigue el patrón: así nadie pierde la parte en curso ni los pasos marcados.
+    const { rows: current } = await db.query('SELECT title FROM pattern_sections WHERE pattern_id = $1 ORDER BY position', [patternId]);
+    if (current.map((s) => s.title).join('|') !== pa.sections.map((s) => s.title).join('|')) {
+      const { rows: [{ n }] } = await db.query('SELECT count(*)::int AS n FROM projects WHERE pattern_id = $1', [patternId]);
+      if (n > 0) {
+        missing.push(`${pa.title}: han cambiado sus partes y lo usan ${n} proyectos (no se toca)`);
+        continue;
+      }
+      await db.query('DELETE FROM pattern_sections WHERE pattern_id = $1', [patternId]);
+      for (const [i, sec] of pa.sections.entries()) {
+        await db.query(
+          `INSERT INTO pattern_sections (pattern_id, position, title, repeat_count, yarn, note)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [patternId, i + 1, sec.title, sec.repeat ?? 1, sec.yarn ?? null, sec.note ?? null],
+        );
+      }
     }
     for (const sec of pa.sections) {
       const { rows: [section] } = await db.query(
@@ -198,7 +232,7 @@ export async function applyPatternText(db) {
         missing.push(`${pa.title} / ${sec.title}`);
         continue;
       }
-      await db.query('UPDATE pattern_sections SET note = $2 WHERE id = $1', [section.id, sec.note ?? null]);
+      await db.query('UPDATE pattern_sections SET note = $2, repeat_count = $3 WHERE id = $1', [section.id, sec.note ?? null, sec.repeat ?? 1]);
       for (const [j, st] of sec.steps.entries()) {
         const values = [section.id, j + 1, st.title ?? null, st.rows?.[0] ?? null, st.rows?.[1] ?? null, st.stitches, st.instructions];
         const { rowCount } = await db.query(

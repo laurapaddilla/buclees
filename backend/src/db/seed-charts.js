@@ -10,8 +10,15 @@ export const charts = {
     Tentáculos: { shape: 'plano', steps: { 1: 'base: 15 cad\n15 pb' } },
   },
   'Bolso de mercado': {
-    Bolso: { shape: 'plano', steps: { 1: 'base: 31 cad\n30 pb', 2: '(5 cad, pb) x 10' } },
-    Asas: { shape: 'plano', steps: { 1: '10 pb' } },
+    Base: {
+      shape: 'redondo',
+      steps: {
+        1: 'am, 6 pb', 2: '6 aum', 3: '(pb, aum) x 6', 4: '(2 pb, aum) x 6', 5: '(3 pb, aum) x 6',
+        6: '(4 pb, aum) x 6', 7: '(5 pb, aum) x 6', 8: '(6 pb, aum) x 6', 9: '(7 pb, aum) x 6', 10: '(8 pb, aum) x 6',
+      },
+    },
+    Red: { shape: 'redondo', steps: { 1: '(5 cad, pb) x 20', 2: '(5 cad, pb) x 20' } },
+    // El borde y las asas, sin esquema: en redondo, las 40 cad de cada asa se verían como un círculo enorme.
   },
   'Manta de granny squares': {
     Cuadrado: {
