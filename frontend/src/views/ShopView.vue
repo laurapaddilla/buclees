@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { BBadge } from '@/design-system/components/index.js';
 import ProductCard from '@/components/ProductCard.vue';
 import { listProducts } from '@/services/products.js';
 import { CATEGORIES } from '@/utils/labels.js';
@@ -33,14 +34,11 @@ const filters = [{ value: null, plural: 'Todo' }, ...CATEGORIES];
 
 <template>
   <section class="page">
-    <h1 class="h1 page-title">Tienda</h1>
-    <p class="body page-intro">Envío 3,95 € · gratis a partir de 40 €.</p>
-    <!-- Foto de ovillos de Buclees. Generada con IA (Gemini), declarado en la memoria. -->
-    <img
-      src="/fotos/ovillos-composicion-ia.jpg"
-      alt="Ovillos de Buclees en rosa, amarillo y oliva (imagen generada con IA)"
-      class="banner"
-    />
+    <!-- Cabecera sencilla (la autora quitó el banner de fotos el 02/11/2026): título y envío en una etiqueta. -->
+    <header class="shop-head">
+      <h1 class="h1 page-title shop-head__title">Tienda</h1>
+      <BBadge tone="oliva">Envío 3,95 € · gratis desde 40 €</BBadge>
+    </header>
 
     <nav class="filters" aria-label="Categorías">
       <RouterLink
@@ -71,21 +69,16 @@ const filters = [{ value: null, plural: 'Todo' }, ...CATEGORIES];
 </template>
 
 <style scoped>
-/* Banner: la composición de ovillos recortada en horizontal. */
-.banner {
-  display: block;
-  width: 100%;
-  aspect-ratio: 2 / 1;
-  margin: 0 0 var(--space-6);
-  object-fit: cover;
-  object-position: center 45%;
-  border-radius: var(--radius-lg);
+.shop-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
-@media (min-width: 768px) {
-  .banner {
-    aspect-ratio: 4 / 1;
-  }
+.shop-head__title {
+  margin: 0;
 }
 
 /* Filtros: píldoras que se deslizan en horizontal en el móvil sin ensanchar la página. */
