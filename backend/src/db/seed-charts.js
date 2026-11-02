@@ -18,8 +18,10 @@ export const charts = {
       shape: 'redondo',
       steps: {
         1: 'am, 3 cad, 2 pa, (2 cad, 3 pa) x 3, 2 cad, pr',
-        2: '(3 pa, 2 cad, 3 pa) x 4',
-        3: '(3 pa, 2 cad, 3 pa, 3 pa) x 4',
+        // {3 pa}: los tres pa en el mismo hueco, como un abanico.
+        2: '({3 pa}, 2 cad, {3 pa}) x 4',
+        3: '({3 pa}, 2 cad, {3 pa}, {3 pa}) x 4',
+        4: '({3 pa}, 2 cad, {3 pa}, {3 pa}, {3 pa}) x 4',
       },
     },
   },

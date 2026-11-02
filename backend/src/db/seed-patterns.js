@@ -41,13 +41,15 @@ export const patterns = [
   },
   {
     title: 'Manta de granny squares', difficulty: 'intermedio', hook_size: '4,5 mm', yarn_weight: 'Worsted',
-    description: 'Cuadrados clásicos unidos en una manta de colores.',
+    description: 'Cuadrados clásicos de cuatro vueltas, cada una de un color, unidos en una manta.',
     materials: 'Merino Worsted en cuatro colores\nGanchillo de 4,5 mm\nAguja lanera',
+    // Granny clásico (tradicional): grupos de 3 pa en el mismo hueco y 2 cad en cada esquina.
     sections: [
-      { title: 'Cuadrado', repeat: 48, steps: [
-        v(1, 1, ['am', 'cad', 'pa', 'pr'], 'En un am: 3 cad y 2 pa, *2 cad, 3 pa* × 3, 2 cad y cierra con 1 pr (12 pa).'),
-        v(2, 2, ['pa', 'cad'], 'En cada esquina: 3 pa, 2 cad, 3 pa (24 pa).'),
-        v(3, 3, ['pa', 'cad'], 'Esquinas: 3 pa, 2 cad, 3 pa. Lados: 3 pa en cada arco (36 pa).'),
+      { title: 'Cuadrado', repeat: 48, note: 'Cambia de color en cada vuelta: empieza la nueva en un arco de esquina.', steps: [
+        v(1, 1, ['am', 'cad', 'pa', 'pr'], 'Color 1. En un am: 3 cad (cuentan como el primer pa) y 2 pa; *2 cad, 3 pa* × 3; 2 cad y cierra con 1 pr en la 3.ª cad (12 pa).'),
+        v(2, 2, ['pa', 'cad', 'pr'], 'Color 2. En cada arco de esquina: 3 pa, 2 cad, 3 pa. Cierra con 1 pr (24 pa).'),
+        v(3, 3, ['pa', 'cad', 'pr'], 'Color 3. Esquinas: 3 pa, 2 cad, 3 pa. En el hueco de cada lado: 3 pa. Cierra con 1 pr (36 pa).'),
+        v(4, 4, ['pa', 'cad', 'pr'], 'Color 4. Esquinas: 3 pa, 2 cad, 3 pa. En cada hueco de los lados: 3 pa (dos grupos por lado). Cierra con 1 pr y remata (48 pa).'),
       ] },
       { title: 'Unión', steps: [
         t('Une los cuadrados', ['pb'], 'Une por el revés con pb, primero en tiras y después las tiras entre sí (48 cuadrados).'),
@@ -169,3 +171,59 @@ export const patterns = [
     ],
   },
 ];
+
+// Lleva el texto de los patrones de Buclees a una base ya sembrada (npm run seed:update), SIN borrar nada:
+// actualiza descripción, materiales, notas de las partes y pasos (por posición) y añade los pasos nuevos.
+// Si cambia la última vuelta de una parte, los contadores que la tenían como objetivo pasan a la nueva.
+export async function applyPatternText(db) {
+  let added = 0;
+  const missing = [];
+  for (const pa of patterns) {
+    const { rows: found } = await db.query(
+      `UPDATE patterns SET description = $2, materials = $3
+       WHERE title = $1 AND user_id IS NULL RETURNING id`,
+      [pa.title, pa.description, pa.materials],
+    );
+    if (found.length === 0) {
+      missing.push(pa.title);
+      continue;
+    }
+    for (const sec of pa.sections) {
+      const { rows: [section] } = await db.query(
+        `SELECT ps.id, (SELECT max(row_to) FROM pattern_steps WHERE section_id = ps.id) AS last_row
+         FROM pattern_sections ps WHERE ps.pattern_id = $1 AND ps.title = $2`,
+        [found[0].id, sec.title],
+      );
+      if (!section) {
+        missing.push(`${pa.title} / ${sec.title}`);
+        continue;
+      }
+      await db.query('UPDATE pattern_sections SET note = $2 WHERE id = $1', [section.id, sec.note ?? null]);
+      for (const [j, st] of sec.steps.entries()) {
+        const values = [section.id, j + 1, st.title ?? null, st.rows?.[0] ?? null, st.rows?.[1] ?? null, st.stitches, st.instructions];
+        const { rowCount } = await db.query(
+          `UPDATE pattern_steps SET title = $3, row_from = $4, row_to = $5, stitches = $6, instructions = $7
+           WHERE section_id = $1 AND position = $2`,
+          values,
+        );
+        if (rowCount === 0) {
+          await db.query(
+            `INSERT INTO pattern_steps (section_id, position, title, row_from, row_to, stitches, instructions)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            values,
+          );
+          added++;
+        }
+      }
+      const rowEnds = sec.steps.filter((st) => st.rows).map((st) => st.rows[1]);
+      const newLast = rowEnds.length ? Math.max(...rowEnds) : null;
+      if (section.last_row != null && newLast != null && newLast !== section.last_row) {
+        await db.query(
+          'UPDATE project_counters_notes SET target_rows = $3 WHERE section_id = $1 AND target_rows = $2',
+          [section.id, section.last_row, newLast],
+        );
+      }
+    }
+  }
+  return { added, missing };
+}
