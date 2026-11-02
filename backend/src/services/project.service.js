@@ -25,9 +25,13 @@ const SELECT_PROJECT = `
 
 const COUNTER_RETURNING = 'RETURNING c.row_count, c.target_rows, c.notes, c.section_id, c.repeat_no';
 
-async function assertPatternExists(patternId) {
+// Un proyecto solo puede seguir un patrón publicado o uno propio de la usuaria (migración 016).
+async function assertPatternExists(patternId, userId) {
   if (patternId == null) return;
-  const { rowCount } = await query('SELECT 1 FROM patterns WHERE id = $1 AND is_active', [patternId]);
+  const { rowCount } = await query(
+    'SELECT 1 FROM patterns WHERE id = $1 AND is_active AND (is_public OR user_id = $2)',
+    [patternId, userId],
+  );
   if (rowCount === 0) {
     throw new HttpError(400, 'El patrón elegido no existe', [{ field: 'pattern_id', message: 'El patrón elegido no existe' }]);
   }
@@ -104,7 +108,7 @@ export async function getProject(userId, projectId) {
 }
 
 export async function createProject(userId, data) {
-  await assertPatternExists(data.pattern_id);
+  await assertPatternExists(data.pattern_id, userId);
 
   // El proyecto y su contador se crean juntos: o los dos o ninguno.
   const projectId = await inTransaction(async (db) => {
@@ -125,7 +129,7 @@ export async function createProject(userId, data) {
 }
 
 export async function updateProject(userId, projectId, data) {
-  await assertPatternExists(data.pattern_id);
+  await assertPatternExists(data.pattern_id, userId);
 
   await inTransaction(async (db) => {
     const { rows } = await db.query('SELECT pattern_id, pdf_file FROM projects WHERE id = $1 AND user_id = $2', [

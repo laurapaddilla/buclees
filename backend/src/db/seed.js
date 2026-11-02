@@ -149,8 +149,9 @@ async function seed() {
     const sections = {}; // 'Patrón/Parte' -> { id, lastRow }
     for (const pa of patterns) {
       const { rows } = await client.query(
-        `INSERT INTO patterns (title, description, difficulty, hook_size, yarn_weight, materials, designer, source_url, is_demo)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+        // Patrones de Buclees: sin dueña (user_id NULL) y públicos (migración 016).
+        `INSERT INTO patterns (title, description, difficulty, hook_size, yarn_weight, materials, designer, source_url, is_demo, is_public)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true) RETURNING id`,
         [pa.title, pa.description, pa.difficulty, pa.hook_size, pa.yarn_weight, pa.materials,
          pa.designer ?? null, pa.source_url ?? null, pa.is_demo ?? false],
       );

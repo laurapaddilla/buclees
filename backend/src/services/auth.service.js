@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool, query } from '../db/pool.js';
 import { HttpError } from '../utils/HttpError.js';
+import { removeUploadedImage } from '../utils/images.js';
 import { removePdfFile } from '../utils/uploads.js';
 
 const SALT_ROUNDS = 10;
@@ -99,11 +100,12 @@ export async function changePassword(id, { current_password, new_password }) {
 }
 
 // Borrar la cuenta (decisión de la autora): sus proyectos, contadores y notas se borran (CASCADE);
-// sus pedidos se conservan anónimos (user_id a NULL por la migración 015 y sin nombre, dirección
+// también sus patrones propios; sus pedidos se conservan anónimos (user_id a NULL por la migración 015 y sin nombre, dirección
 // ni teléfono). No se puede si tiene pedidos en camino (habría que enviarlos) ni si es la administradora.
 export async function deleteMe(id, { password }) {
   const client = await pool.connect();
   let pdfFiles = [];
+  let patternImages = [];
   try {
     await client.query('BEGIN');
     const user = await checkPassword(client, id, password, 'password');
@@ -120,6 +122,9 @@ export async function deleteMe(id, { password }) {
     // PDF de sus proyectos: se borran del disco después de confirmar la transacción.
     const { rows: pdfs } = await client.query('SELECT pdf_file FROM projects WHERE user_id = $1 AND pdf_file IS NOT NULL', [id]);
     pdfFiles = pdfs.map((p) => p.pdf_file);
+    // Igual con las fotos de sus patrones (los patrones se borran en cascada con la usuaria).
+    const { rows: imgs } = await client.query('SELECT image_url FROM patterns WHERE user_id = $1 AND image_url IS NOT NULL', [id]);
+    patternImages = imgs.map((p) => p.image_url);
     await client.query('UPDATE orders SET ship_name = NULL, ship_address = NULL, ship_phone = NULL WHERE user_id = $1', [id]);
     await client.query('DELETE FROM users WHERE id = $1', [id]);
     await client.query('COMMIT');
@@ -129,5 +134,5 @@ export async function deleteMe(id, { password }) {
   } finally {
     client.release();
   }
-  await Promise.all(pdfFiles.map(removePdfFile));
+  await Promise.all([...pdfFiles.map(removePdfFile), ...patternImages.map(removeUploadedImage)]);
 }

@@ -27,3 +27,18 @@ export function adminOnly(req, res, next) {
   }
   next();
 }
+
+// Sesión opcional: si llega un token válido deja req.user; si no llega (o no vale), sigue como visitante.
+// Sirve para rutas públicas que muestran algo más a su dueña (un patrón privado propio).
+export function optionalAuth(req, res, next) {
+  const [scheme, token] = (req.get('Authorization') ?? '').split(' ');
+  if (scheme === 'Bearer' && token) {
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = { id: Number(payload.sub), role: payload.role };
+    } catch {
+      // Token no válido: se trata como visitante.
+    }
+  }
+  next();
+}
